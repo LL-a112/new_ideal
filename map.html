@@ -22,63 +22,81 @@
 </div>
 
 <script>
-// 初始化图表
 let mapChart = echarts.init(document.getElementById('map-chart'));
-let coffeeData = [];
-let worldJson = null;
+mapChart.showLoading();
 
-// 读取地图 JSON
-fetch('world.json')
-.then(res=>res.json())
-.then(json=>{
-    worldJson = json;
+// 异步加载地图和数据
+Promise.all([
+    fetch('world.json').then(res => res.json()),
+    fetch('data/coffee.json').then(res => res.json())
+]).then(([worldJson, coffeeData]) => {
+    mapChart.hideLoading();
     echarts.registerMap('worldMap', worldJson);
-    loadCoffeeData();
-});
 
-function loadCoffeeData(){
-    fetch('data/coffee.json')
-    .then(res=>res.json())
-    .then(data=>{
-        coffeeData = data;
-        renderMap();
-    });
-}
-
-function renderMap(){
-    // 计算各国平均咖啡摄入
-    let countryMap = {};
-    coffeeData.forEach(d=>{
+    // 计算每个国家平均咖啡摄入
+    const countryMap = {};
+    coffeeData.forEach(d => {
         if(!countryMap[d.Country]) countryMap[d.Country] = {sum:0,count:0};
         countryMap[d.Country].sum += d.Coffee_Intake;
         countryMap[d.Country].count += 1;
     });
 
-    let dataList = Object.keys(countryMap).map(c=>{
-        let avg = countryMap[c].sum / countryMap[c].count;
-        return {name: c, value: avg.toFixed(2)};
+    const dataList = Object.keys(countryMap).map(c=>{
+        const avg = countryMap[c].sum / countryMap[c].count;
+        return { name:c, value: parseFloat(avg.toFixed(2)) };
     });
 
-    mapChart.setOption({
-        tooltip:{trigger:'item',formatter:'{b}: {c}'},
-        visualMap:{
-            min:0,
-            max:Math.max(...dataList.map(d=>d.value)),
-            left:'left',
-            top:'bottom',
-            text:['High','Low'],
-            calculable:true,
-            inRange:{color:['#B0E0E6','#FF5722']}
+    const values = dataList.map(d=>d.value);
+    const minVal = Math.min(...values);
+    const maxVal = Math.max(...values);
+
+    // 配置 option（借鉴美国例子结构）
+    const option = {
+        title: {
+            text: '全球平均咖啡摄入量',
+            left: 'center'
         },
-        series:[{
-            type:'map',
-            map:'worldMap',
-            roam:true,
-            label:{show:false},
-            data:dataList
+        tooltip: {
+            trigger: 'item',
+            formatter: '{b}: {c} cups/day'
+        },
+        visualMap: {
+            min: minVal,
+            max: maxVal,
+            left: 'right',
+            top: 'bottom',
+            text: ['High','Low'],
+            calculable: true,
+            inRange: {
+                color: ['#B0E0E6','#FF5722']
+            }
+        },
+        toolbox: {
+            show: true,
+            left: 'left',
+            top: 'top',
+            feature: {
+                dataView: {readOnly:false},
+                restore: {},
+                saveAsImage: {}
+            }
+        },
+        series: [{
+            name: 'Average Coffee Intake',
+            type: 'map',
+            map: 'worldMap',
+            roam: true,
+            label: { show: false },
+            data: dataList,
+            emphasis: { label: { show: true } }
         }]
-    });
-}
+    };
+
+    mapChart.setOption(option);
+}).catch(err=>{
+    mapChart.hideLoading();
+    console.error('加载地图或数据失败:', err);
+});
 </script>
 </body>
 </html>
