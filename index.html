@@ -40,27 +40,39 @@
   </div>
 
 <script>
+// 使用 IIFE (立即调用函数表达式) 来避免污染全局命名空间
 (function() {
-  // 替换成你的 GitHub 仓库 raw 链接
-  const DATA_FILE = "https://raw.githubusercontent.com/LL-a112/new-ideal/main/synthetic_coffee_health_10000.csv";
+  const DATA_FILE = "https://raw.githubusercontent.com/LL-a112/new_ideal/main/synthetic_coffee_health_10000.csv";
 
+  /**
+   * 处理原始数据，转换类型并处理无效值
+   * @param {Array} rawData - 从 CSV 文件加载的原始数据
+   * @returns {Array} - 清洗和处理后的数据
+   */
   function processData(rawData) {
     if (!rawData || rawData.length === 0) {
       throw new Error("CSV 文件为空或格式不正确。");
     }
     return rawData.map(d => ({
-      coffee_cups_per_day: +d.coffee_cups_per_day || null,
-      sleep_hours: +d.sleep_hours || null,
-      stress_index: +d.stress_index || null,
+      // 使用 || null 来将 NaN 转换为 null，d3.mean 会自动忽略 null
+      coffee_cups_per_day: +d.Coffee_Intake || null,
+      sleep_hours: +d.Sleep_Hours || null,
+      stress_index: +d.Stress_Level || null,
       BMI: +d.BMI || null,
-      heart_disease: +d.heart_disease || null
+      heart_disease: +d.Health_Issues === "Heart Disease" ? 1 : 0
     }));
   }
 
+  /**
+   * 计算关键绩效指标
+   * @param {Array} data - 处理后的数据
+   * @returns {Array} - 包含 KPI 标题和值的对象数组
+   */
   function calculateKpis(data) {
     if (!data || data.length === 0) {
       throw new Error("没有可用的数据进行计算。");
     }
+    
     return [
       { title: "平均咖啡摄入量 (杯/天)", value: d3.mean(data, d => d.coffee_cups_per_day).toFixed(2) },
       { title: "平均睡眠时长 (小时)", value: d3.mean(data, d => d.sleep_hours).toFixed(2) },
@@ -70,9 +82,14 @@
     ];
   }
 
+  /**
+   * 将 KPI 数据渲染到页面上
+   * @param {Array} kpis - KPI 数据数组
+   */
   function renderKpis(kpis) {
     const container = d3.select("#kpi-container");
-    container.html("");
+    container.html(""); // 清空加载提示或旧内容
+
     kpis.forEach(kpi => {
       const card = container.append("div").attr("class", "kpi-card");
       card.append("div").attr("class", "kpi-title").text(kpi.title);
@@ -80,25 +97,33 @@
     });
   }
 
+  /**
+   * 在页面上显示错误信息
+   * @param {string} message - 要显示的错误消息
+   */
   function showError(message) {
     console.error("看板加载失败:", message);
     const container = d3.select("#kpi-container");
-    container.html("");
+    container.html(""); // 清空原有内容
     const errorCard = container.append("div").attr("class", "status-indicator error-card");
     errorCard.append("h2").text("⚠️ 数据加载失败");
     errorCard.append("p").text(message);
   }
 
+  // --- 主执行逻辑 ---
+  // 使用 Promise 链式调用，使逻辑更清晰
   d3.csv(DATA_FILE)
     .then(processData)
     .then(calculateKpis)
     .then(renderKpis)
     .catch(error => {
+      // 捕获链中任何环节发生的错误
       showError(error.message || "发生未知错误，请检查控制台获取更多信息。");
     });
 
 })();
 </script>
+
 
 </body>
 </html>
