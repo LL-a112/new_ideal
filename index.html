@@ -51,7 +51,10 @@
     }
 
     console.log("原始 CSV 数据示例:", rawData[0]); // 检查字段名
-
+    
+    // 过滤掉 Gender 为 Other 的行
+    const filteredData = rawData.filter(d => d["Gender"] !== "Other");
+    
     return rawData.map(d => ({
       coffee_cups_per_day: +d["Coffee_Intake"] || null,
       sleep_hours: +d["Sleep_Hours"] || null,
