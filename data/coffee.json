@@ -1,4 +1,0 @@
-import pandas as pd
-df = pd.read_csv("synthetic_coffee_health_10000.csv")
-df = df[df['Gender'].isin(['Male','Female'])]
-df.to_json("data/coffee.json", orient="records", force_ascii=False)
