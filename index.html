@@ -1,109 +1,104 @@
 <!DOCTYPE html>
-<html lang="zh" style="height: 100%; background: #f5f6fa; font-family: 'Microsoft YaHei', sans-serif;">
+<html lang="zh">
 <head>
   <meta charset="UTF-8">
-  <title>健康相关指标 Dashboard</title>
-  <script src="https://cdn.jsdelivr.net/npm/echarts@5/dist/echarts.min.js"></script>
+  <title>数据分析看板</title>
+  <script src="https://d3js.org/d3.v7.min.js"></script>
   <style>
     body {
-      margin: 0;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      background: #f5f6fa;
+      font-family: Arial, sans-serif;
+      background: #f5f7fa;
+      margin: 20px;
     }
     h1 {
       text-align: center;
-      margin: 20px 0;
-      font-size: 28px;
-      color: #2c3e50;
+      color: #333;
     }
-    .dashboard {
+    .kpi-container {
       display: grid;
-      grid-template-columns: 1fr 1fr;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
       gap: 20px;
-      width: 90%;
-      max-width: 1200px;
+      margin-top: 20px;
     }
-    .card {
-      background: #fff;
-      border-radius: 16px;
+    .kpi-card {
+      background: white;
       padding: 20px;
-      box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+      border-radius: 12px;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+      text-align: center;
     }
-    .chart {
-      height: 300px;
+    .kpi-title {
+      font-size: 16px;
+      color: #666;
     }
-    .bar {
-      height: 200px;
+    .kpi-value {
+      font-size: 24px;
+      font-weight: bold;
+      margin-top: 10px;
+      color: #2b7cff;
+    }
+    .nav-links {
+      margin-top: 40px;
+      text-align: center;
+    }
+    .nav-links a {
+      margin: 0 15px;
+      text-decoration: none;
+      color: #2b7cff;
+      font-weight: bold;
     }
   </style>
 </head>
 <body>
-  <h1>健康相关指标 Dashboard</h1>
-  <div class="dashboard">
-    <div class="card"><div id="sleep" class="chart"></div></div>
-    <div class="card"><div id="stress" class="chart"></div></div>
-    <div class="card"><div id="bmi" class="chart"></div></div>
-    <div class="card"><div id="coffee" class="bar"></div></div>
+  <h1>📊 数据分析看板</h1>
+
+  <div class="kpi-container" id="kpi-container">
+    <!-- KPI 卡片自动生成 -->
   </div>
 
-  <script>
-    // 睡眠
-    var sleepChart = echarts.init(document.getElementById('sleep'));
-    sleepChart.setOption({
-      title: { text: '平均睡眠时长', left: 'center' },
-      series: [{
-        type: 'gauge',
-        min: 0, max: 10,
-        axisLine: { lineStyle: { color: [[0.6, '#FF6E76'], [0.9, '#FDDD60'], [1, '#58D9F9']], width: 15 } },
-        pointer: { width: 5 },
-        detail: { formatter: '{value} h', fontSize: 18 },
-        data: [{ value: 6.65 }]
-      }]
+  <div class="nav-links">
+    <a href="page2.html">查看更多分析 →</a>
+  </div>
+
+ <script src="https://d3js.org/d3.v7.min.js"></script>
+<script>
+  // 读取 CSV 文件（必须和 HTML 在同一目录）
+  d3.csv("synthetic_coffee_health_10000.csv").then(function(data) {
+    console.log("原始数据：", data);
+
+    // 转换为数字
+    data.forEach(d => {
+      d.coffee_cups_per_day = +d.coffee_cups_per_day;
+      d.sleep_hours = +d.sleep_hours;
+      d.stress_index = +d.stress_index;
+      d.BMI = +d.BMI;
+      d.heart_disease = +d.heart_disease;
     });
 
-    // 压力
-    var stressChart = echarts.init(document.getElementById('stress'));
-    stressChart.setOption({
-      title: { text: '平均压力指数', left: 'center' },
-      series: [{
-        type: 'gauge',
-        min: 0, max: 5,
-        axisLine: { lineStyle: { color: [[0.33, '#58D9F9'], [0.66, '#FDDD60'], [1, '#FF6E76']], width: 15 } },
-        pointer: { width: 5 },
-        detail: { formatter: '{value}', fontSize: 18 },
-        data: [{ value: 1.39 }]
-      }]
-    });
+    // 计算 KPI
+    let avgCoffee = d3.mean(data, d => d.coffee_cups_per_day);
+    let avgSleep = d3.mean(data, d => d.sleep_hours);
+    let avgStress = d3.mean(data, d => d.stress_index);
+    let avgBMI = d3.mean(data, d => d.BMI);
+    let heartDiseaseRate = d3.mean(data, d => d.heart_disease) * 100;
 
-    // BMI
-    var bmiChart = echarts.init(document.getElementById('bmi'));
-    bmiChart.setOption({
-      title: { text: '平均 BMI', left: 'center' },
-      series: [{
-        type: 'gauge',
-        min: 10, max: 35,
-        axisLine: { lineStyle: { color: [[0.57, '#58D9F9'], [0.74, '#FDDD60'], [1, '#FF6E76']], width: 15 } },
-        pointer: { width: 5 },
-        detail: { formatter: '{value}', fontSize: 18 },
-        data: [{ value: 24.03 }]
-      }]
-    });
+    let kpis = [
+      {title: "平均咖啡摄入量 (杯/天)", value: avgCoffee.toFixed(2)},
+      {title: "平均睡眠时长 (小时)", value: avgSleep.toFixed(2)},
+      {title: "平均压力指数", value: avgStress.toFixed(2)},
+      {title: "平均 BMI", value: avgBMI.toFixed(2)},
+      {title: "心脏病比例 (%)", value: heartDiseaseRate.toFixed(1) + "%"}
+    ];
 
-    // 咖啡
-    var coffeeChart = echarts.init(document.getElementById('coffee'));
-    coffeeChart.setOption({
-      title: { text: '平均咖啡摄入量', left: 'center' },
-      xAxis: { type: 'category', data: ['咖啡 (cups/day)'] },
-      yAxis: { type: 'value', min: 0, max: 6 },
-      series: [{
-        type: 'bar',
-        data: [2.49],
-        itemStyle: { color: '#3498db', borderRadius: [6,6,0,0] },
-        label: { show: true, position: 'top', fontSize: 14 }
-      }]
+    // 渲染到页面
+    let container = d3.select("#kpi-container");
+    kpis.forEach(kpi => {
+      let card = container.append("div").attr("class", "kpi-card");
+      card.append("div").attr("class", "kpi-title").text(kpi.title);
+      card.append("div").attr("class", "kpi-value").text(kpi.value);
     });
-  </script>
+  });
+</script>
+
 </body>
 </html>
