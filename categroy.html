@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+<meta charset="UTF-8">
+<title>分类分析</title>
+<link rel="stylesheet" href="css/style.css">
+<script src="js/echarts.min.js"></script>
+</head>
+<body>
+<header>
+    <h1>职业与咖啡摄入分析</h1>
+    <nav>
+        <a href="index.html">首页</a>
+        <a href="health.html">健康分析</a>
+        <a href="map.html">全球地图</a>
+        <a href="category.html">分类分析</a>
+    </nav>
+</header>
+
+<div class="container">
+    <div class="sidebar">
+        <label>选择生活习惯指标</label>
+        <select id="habit-select">
+            <option value="Smoking">吸烟</option>
+            <option value="Alcohol_Consumption">饮酒</option>
+            <option value="Physical_Activity_Hours">运动时长</option>
+        </select>
+    </div>
+    <div id="bar-chart" class="chart-container"></div>
+</div>
+
+<script>
+let barChart = echarts.init(document.getElementById('bar-chart'));
+let coffeeData = [];
+
+fetch('data/coffee.json')
+.then(res=>res.json())
+.then(data=>{
+    coffeeData = data;
+    renderBar('Smoking');
+});
+
+document.getElementById('habit-select').addEventListener('change', e=>{
+    renderBar(e.target.value);
+});
+
+function renderBar(habit){
+    // 按习惯和性别分组平均咖啡摄入
+    let groups = {};
+    coffeeData.forEach(d=>{
+        let key = habit=='Physical_Activity_Hours' ? 
+            (d.Physical_Activity_Hours<=2?'0-2h':d.Physical_Activity_Hours<=4?'2-4h':d.Physical_Activity_Hours<=6?'4-6h':'6h+') 
+            + ` (${d.Gender})`
+            : d[habit] + ` (${d.Gender})`;
+        if(!groups[key]) groups[key] = [];
+        groups[key].push(d.Coffee_Intake);
+    });
+
+    let xData = Object.keys(groups);
+    let yData = xData.map(k=>{
+        let vals = groups[k];
+        let avg = vals.reduce((a,b)=>a+b,0)/vals.length;
+        return avg.toFixed(2);
+    });
+
+    barChart.setOption({
+        tooltip:{trigger:'axis'},
+        xAxis:{type:'category', data:xData},
+        yAxis:{type:'value', name:'平均咖啡摄入量'},
+        series:[{type:'bar', data:yData}]
+    });
+}
+</script>
+</body>
+</html>
