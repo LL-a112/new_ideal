@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+<meta charset="UTF-8">
+<title>全球地图</title>
+<link rel="stylesheet" href="css/style.css">
+<script src="js/echarts.min.js"></script>
+</head>
+<body>
+<header>
+    <h1>全球咖啡消费地图</h1>
+    <nav>
+        <a href="index.html">首页</a>
+        <a href="health.html">健康分析</a>
+        <a href="map.html">全球地图</a>
+        <a href="category.html">分类分析</a>
+    </nav>
+</header>
+
+<div class="container">
+    <div id="map-chart" class="chart-container"></div>
+</div>
+
+<script>
+// 初始化图表
+let mapChart = echarts.init(document.getElementById('map-chart'));
+let coffeeData = [];
+let worldJson = null;
+
+// 读取地图 JSON
+fetch('world.json')
+.then(res=>res.json())
+.then(json=>{
+    worldJson = json;
+    echarts.registerMap('worldMap', worldJson);
+    loadCoffeeData();
+});
+
+function loadCoffeeData(){
+    fetch('data/coffee.json')
+    .then(res=>res.json())
+    .then(data=>{
+        coffeeData = data;
+        renderMap();
+    });
+}
+
+function renderMap(){
+    // 计算各国平均咖啡摄入
+    let countryMap = {};
+    coffeeData.forEach(d=>{
+        if(!countryMap[d.Country]) countryMap[d.Country] = {sum:0,count:0};
+        countryMap[d.Country].sum += d.Coffee_Intake;
+        countryMap[d.Country].count += 1;
+    });
+
+    let dataList = Object.keys(countryMap).map(c=>{
+        let avg = countryMap[c].sum / countryMap[c].count;
+        return {name: c, value: avg.toFixed(2)};
+    });
+
+    mapChart.setOption({
+        tooltip:{trigger:'item',formatter:'{b}: {c}'},
+        visualMap:{
+            min:0,
+            max:Math.max(...dataList.map(d=>d.value)),
+            left:'left',
+            top:'bottom',
+            text:['High','Low'],
+            calculable:true,
+            inRange:{color:['#B0E0E6','#FF5722']}
+        },
+        series:[{
+            type:'map',
+            map:'worldMap',
+            roam:true,
+            label:{show:false},
+            data:dataList
+        }]
+    });
+}
+</script>
+</body>
+</html>
