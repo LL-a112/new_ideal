@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html style="height: 100%">
+<head>
+  <meta charset="utf-8">
+  <title>ECharts 示例</title>
+  <!-- 引入 ECharts -->
+  <script src="https://cdn.jsdelivr.net/npm/echarts@5/dist/echarts.min.js"></script>
+</head>
+<body style="height: 100%; margin: 0">
+  <!-- 图表容器 -->
+  <div id="main" style="height:100%"></div>
+
+  <script>
+    var chartDom = document.getElementById('main');
+    var myChart = echarts.init(chartDom);
+
+    var option = {
+      title: {
+        text: '健康相关指标 Dashboard',
+        left: 'center',
+        top: 10
+      },
+      tooltip: { formatter: '{a} <br/>{c} {b}' },
+      grid: { top: 100 },
+      series: [
+        {
+          name: '睡眠时长',
+          type: 'gauge',
+          center: ['25%', '55%'],
+          min: 0,
+          max: 10,
+          splitNumber: 10,
+          axisLine: { lineStyle: { color: [[0.6, '#FF6E76'], [0.9, '#FDDD60'], [1, '#58D9F9']], width: 10 } },
+          detail: { formatter: '{value} h' },
+          data: [{ value: 6.65, name: '睡眠' }]
+        },
+        {
+          name: '压力指数',
+          type: 'gauge',
+          center: ['75%', '55%'],
+          min: 0,
+          max: 5,
+          splitNumber: 5,
+          axisLine: { lineStyle: { color: [[0.33, '#58D9F9'], [0.66, '#FDDD60'], [1, '#FF6E76']], width: 10 } },
+          detail: { formatter: '{value}' },
+          data: [{ value: 1.39, name: '压力' }]
+        },
+        {
+          name: 'BMI',
+          type: 'gauge',
+          center: ['50%', '85%'],
+          radius: '40%',
+          min: 10,
+          max: 35,
+          axisLine: { lineStyle: { color: [[0.57, '#58D9F9'], [0.74, '#FDDD60'], [1, '#FF6E76']], width: 10 } },
+          detail: { formatter: '{value}' },
+          data: [{ value: 24.03, name: 'BMI' }]
+        },
+        {
+          type: 'bar',
+          data: [2.49],
+          xAxisIndex: 0,
+          yAxisIndex: 0
+        }
+      ],
+      xAxis: [{ type: 'category', data: ['咖啡摄入量 (cups/day)'], gridIndex: 0 }],
+      yAxis: [{ type: 'value', name: 'cups/day', gridIndex: 0, min: 0, max: 6 }]
+    };
+
+    myChart.setOption(option);
+  </script>
+</body>
+</html>
