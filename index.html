@@ -58,9 +58,13 @@
     return rawData.map(d => ({
       coffee_cups_per_day: +d["Coffee_Intake"] || null,
       sleep_hours: +d["Sleep_Hours"] || null,
-      stress_index: +d["Stress_Level"] || null,
+       stress_index: {
+        "Low": 1,
+        "Medium": 2,
+        "High": 3
+      }[d["Stress_Level"]] || null,
       BMI: +d["BMI"] || null,
-      heart_disease: d["Health_Issues"] === "Heart Disease" ? 1 : 0
+      health_issues: d["Health_Issues"] || "None"
     }));
   }
 
@@ -72,12 +76,14 @@
 
   // 计算 KPI
   function calculateKpis(data) {
+    const stressLevels = data.map(d => d.stress_index).filter(v => v != null);
+    const healthIssues = data.map(d => d.health_issues);
     return [
       { title: "平均咖啡摄入量 (杯/天)", value: safeMean(data, d => d.coffee_cups_per_day).toFixed(2) },
       { title: "平均睡眠时长 (小时)", value: safeMean(data, d => d.sleep_hours).toFixed(2) },
       { title: "平均压力指数", value: safeMean(data, d => d.stress_index).toFixed(2) },
       { title: "平均 BMI", value: safeMean(data, d => d.BMI).toFixed(2) },
-      { title: "心脏病比例 (%)", value: (safeMean(data, d => d.heart_disease) * 100).toFixed(1) + "%" }
+      { title: "无健康问题的比例 (%)", value: (healthIssues.filter(h => h === "None").length / healthIssues.length * 100).toFixed(1) + "%" }
     ];
   }
 
