@@ -88,7 +88,16 @@ Promise.all([
             roam: false,
             label: { show: false },
             data: dataList,
-            emphasis: { label: { show: true } }
+            emphasis: { label: { show: true } },
+            itemStyle: {
+        normal: {
+            areaColor: '#E0E0E0',   // 没有数据的区域颜色
+            borderColor: '#555'      // 国家边框颜色
+        },
+        emphasis: {
+            areaColor: '#FFD700'     // 鼠标悬停高亮颜色
+        }
+    }
         }]
     };
 
