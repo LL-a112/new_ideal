@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+<meta charset="UTF-8">
+<title>健康分析</title>
+<link rel="stylesheet" href="css/style.css">
+<script src="js/echarts.min.js"></script>
+</head>
+<body>
+<header>
+    <h1>健康分析</h1>
+    <nav>
+        <a href="index.html">首页</a>
+        <a href="health.html">健康分析</a>
+        <a href="map.html">全球地图</a>
+        <a href="category.html">分类分析</a>
+    </nav>
+</header>
+
+<div class="container">
+    <div class="sidebar">
+        <label>选择健康指标</label>
+        <select id="health-metric">
+            <option value="Sleep_Hours">睡眠时长</option>
+            <option value="Stress_Index">压力指数</option>
+            <option value="Heart_Rate">心率</option>
+            <option value="BMI">BMI</option>
+        </select>
+    </div>
+    <div id="scatter-chart" class="chart-container"></div>
+</div>
+
+<script>
+let scatterChart = echarts.init(document.getElementById('scatter-chart'));
+let coffeeData = [];
+
+fetch('data/coffee.json')
+.then(res=>res.json())
+.then(data=>{
+    coffeeData = data;
+    renderScatter('Sleep_Hours');
+});
+
+document.getElementById('health-metric').addEventListener('change', e=>{
+    renderScatter(e.target.value);
+});
+
+function renderScatter(metric){
+    let stressMapping = {'Low':1,'Medium':2,'High':3};
+    let seriesData = coffeeData.map(d=>{
+        let val = metric=='Stress_Index' ? stressMapping[d.Stress_Level] : d[metric];
+        return {
+            value: [d.Coffee_Intake, val],
+            name: `${d.Country} / ${d.Occupation}`,
+            symbolSize: Math.max(5,d.Age/5),
+            itemStyle: {color: d.Gender=="Male" ? "#FF5722" : "#2196F3"}
+        };
+    });
+    scatterChart.setOption({
+        tooltip:{formatter:'{b}<br/>咖啡: {c[0]}<br/>指标: {c[1]}'},
+        xAxis:{name:'每日咖啡摄入量'},
+        yAxis:{name:metric},
+        series:[{type:'scatter',data:seriesData}]
+    });
+}
+</script>
+</body>
+</html>
