@@ -57,7 +57,7 @@ select:focus {
 </header>
 <h1>☕ 咖啡摄入与健康指标雷达图</h1>
 
- <div class="select-container"
+ <div class="select-container">
 <select id="countrySelect">
   <option value="Australia">Australia</option>
   <option value="Belgium">Belgium</option>
@@ -97,6 +97,7 @@ fetch("data/coffee.json")
     ];
 
     const chart = echarts.init(document.getElementById('radarChart'));
+   
     const select = document.getElementById('countrySelect');
 
     function renderRadar(country) {
@@ -128,7 +129,7 @@ fetch("data/coffee.json")
      
 
     // 初始显示第一个国家
-    const select = document.getElementById('countrySelect');
+   
     renderRadar(select.value);
 
     // 下拉切换
