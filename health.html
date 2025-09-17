@@ -63,8 +63,8 @@ fetch("data/coffee.json")
   .then(res => res.json())
   .then(data => {
     const countries = [...new Set(data.map(d => d.Country))];
-    const factors = ["Coffee_Intake","Caffeine_mg","Sleep_Hours","BMI","Heart_Rate","Stress_Index","Physical_Activity_Hours"]; // 关键指标
-    const levelMap = { "Low": 1, "Medium": 2, "High": 3, "低": 1, "中": 2, "高": 3, "Good":3, "Average":2, "Poor":1 }; // 支持程度映射
+    const factors = ["Sleep_Hours","BMI","Stress_Index","Physical_Activity_Hours"]; // 关键指标
+    const levelMap = { "Low": 1, "Medium": 2, "High": 3 }; // 支持程度映射
 
     const colors = ["#ff6f61","#ffb74d","#4db6ac","#7986cb","#aed581","#f06292","#ba68c8"];
 
