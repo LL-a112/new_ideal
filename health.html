@@ -82,52 +82,45 @@ fetch("data/coffee.json")
   .then(res => res.json())
   .then(data => {
     const countries = ["Australia","Belgium","Brazil","Canada","China","Finland","France","Germany","India","Italy","Japan","Mexico","Netherlands","Norway","South Korea","Spain","Sweden","Switzerland","UK","USA"];
+    const countryMap = {
+     "United States": "USA",
+     "Korea, South": "South Korea"
+      };
     const levelMap = { "Low": 1, "Medium": 2, "High": 3 }; // 支持程度映射
     const colors = ["#ff6f61","#ffb74d","#4db6ac"];
 
     const polarChart = echarts.init(document.getElementById('polar'));
 
-    function renderChart(factor) {
-      const sData = [];
-      data.forEach(item => {
-        const ci = countries.indexOf(item.Country);
-        if(ci === -1) return;
-        let val = item[factor];
-        if(typeof val !== "number") val = levelMap[val] || 0;
-        sData.push([ci, val]);
-      });
+   function renderChart(factor) {
+  const sData = [];
+  data.forEach(item => {
+    const countryName = countryMap[item.Country] || item.Country;
+    const ci = countries.indexOf(countryName);
+    if(ci === -1) return;
+    let val = item[factor];
+    if(val === null || val === undefined || val === "") return;
+    if(typeof val !== "number") val = levelMap[val] || 0;
+    sData.push([ci, val]);
+  });
 
-      const option = {
-        title: {
-          text: factor + ' 极坐标分布',
-          left: 'center',
-          top: 10
-        },
-        tooltip: {
-          formatter: (params) => `${countries[params.value[0]]} - ${factor}<br/>数值: ${params.value[1]}`
-        },
-        polar: {},
-        angleAxis: {
-          type: 'category',
-          data: countries,
-          axisLabel: { rotate: 45 }
-        },
-        radiusAxis: {
-          type: 'value',
-          min: 0
-        },
-        series: [{
-          name: factor,
-          type: 'scatter',
-          coordinateSystem: 'polar',
-          data: sData,
-          symbolSize: 12,
-          itemStyle: { color: colors[0] }
-        }]
-      };
-      polarChart.setOption(option);
-    }
+  const maxVal = Math.max(...sData.map(d => d[1])) || 10;
 
+  polarChart.setOption({
+    title: { text: factor + " 极坐标分布", left: 'center', top: 10 },
+    tooltip: { formatter: (params) => `${countries[params.value[0]]} - ${factor}<br/>数值: ${params.value[1]}` },
+    polar: {},
+    angleAxis: { type: 'category', data: countries, axisLabel: { rotate: 45 } },
+    radiusAxis: { type: 'value', min: 0, max: maxVal + 2 },
+    series: [{
+      name: factor,
+      type: 'scatter',
+      coordinateSystem: 'polar',
+      data: sData,
+      symbolSize: 12,
+      itemStyle: { color: colors[factor] }
+    }]
+  });
+}
     // 初始渲染
     renderChart(document.getElementById('factorSelect').value);
 
