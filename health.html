@@ -33,84 +33,81 @@
 
 <script>
 let polarChart = echarts.init(document.getElementById('polar-chart'));
+let coffeeData = [];
 
-// 模拟更多国家
-const countries = [
-  "China","USA","UK","France","Germany","Brazil","India",
-  "Japan","Canada","Australia","Russia","Italy","Spain",
-  "South Korea","Mexico","Netherlands","Sweden","Norway"
-];
-
-// 类别映射
+// 压力类别
 const stressLevels = ["Low","Medium","High"];
 
-// 模拟数据
-function generateData(metric) {
-  let data = [];
-  for (let i = 0; i < countries.length; i++) {
-    if (metric === "Stress_Level") {
-      for (let j = 0; j < stressLevels.length; j++) {
-        data.push([j, i, Math.round(Math.random() * 20)]);
-      }
-    } else {
-      for (let j = 0; j < 5; j++) { // 随机 5 段数值
-        let value = Math.round(Math.random() * 100);
-        data.push([j, i, value]);
-      }
-    }
-  }
-  return data;
-}
+// 读取真实数据
+fetch('data/coffee.json')
+.then(res=>res.json())
+.then(data=>{
+    coffeeData = data;
+    renderPolar("Sleep_Hours");
+});
 
 // 渲染函数
 function renderPolar(metric) {
-  let isCategory = metric === "Stress_Level";
+    // 获取所有国家
+    let countries = [...new Set(coffeeData.map(d=>d.Country))];
 
-  let angleAxisData = countries;
-  let radiusAxisData = isCategory ? stressLevels : ["段1","段2","段3","段4","段5"];
+    // 判断是否是类别型
+    let isCategory = metric === "Stress_Level";
 
-  let option = {
-    title: {
-      text: `国家与${metric}分布`,
-      left: 'center'
-    },
-    legend: { show: false },
-    polar: {},
-    tooltip: {
-      formatter: function (params) {
-        let country = countries[params.value[1]];
-        let level = isCategory ? stressLevels[params.value[0]] : radiusAxisData[params.value[0]];
-        return `${country}<br/>${metric}: ${level}<br/>值: ${params.value[2]}`;
-      }
-    },
-    angleAxis: {
-      type: 'category',
-      data: angleAxisData,
-      boundaryGap: false,
-      axisLabel: { rotate: 45 }
-    },
-    radiusAxis: {
-      type: 'category',
-      data: radiusAxisData
-    },
-    series: [
-      {
-        name: '健康分布',
-        type: 'scatter',
-        coordinateSystem: 'polar',
-        symbolSize: val => Math.max(5, val[2] / 3),
-        itemStyle: { color: '#42a5f5' },
-        data: generateData(metric)
-      }
-    ]
-  };
-  polarChart.setOption(option);
+    let seriesData = coffeeData.map(d=>{
+        let val = d[metric];
+        let idxX = countries.indexOf(d.Country);
+        let idxY;
+
+        if (isCategory) {
+            idxY = stressLevels.indexOf(val);
+        } else {
+            idxY = val; // 数值型直接用
+        }
+
+        return [idxY, idxX, val];
+    });
+
+    let option = {
+        title: {
+            text: `国家与 ${metric} 分布`,
+            left: 'center'
+        },
+        polar: {},
+        tooltip: {
+            formatter: function (params) {
+                let country = countries[params.value[1]];
+                let label = isCategory ? stressLevels[params.value[0]] : params.value[0];
+                return `${country}<br/>${metric}: ${label}<br/>值: ${params.value[2]}`;
+            }
+        },
+        angleAxis: {
+            type: 'category',
+            data: countries,
+            boundaryGap: false,
+            axisLabel: { rotate: 45 }
+        },
+        radiusAxis: isCategory ? {
+            type: 'category',
+            data: stressLevels
+        } : {
+            type: 'value',
+            name: metric
+        },
+        series: [{
+            name: '健康分布',
+            type: 'scatter',
+            coordinateSystem: 'polar',
+            symbolSize: val => isCategory ? 10 + Math.random()*10 : Math.max(5, val[2]/3),
+            itemStyle: { color: '#42a5f5' },
+            data: seriesData
+        }]
+    };
+
+    polarChart.setOption(option);
 }
 
-// 初始加载
-renderPolar("Sleep_Hours");
-
-// 绑定下拉框
+// 下拉框事件
 document.getElementById('health-metric').addEventListener('change', e=>{
   renderPolar(e.target.value);
 });
