@@ -82,7 +82,10 @@ fetch("data/coffee.json")
       title: {text:"年龄分布", left:"center"},
       xAxis: {type:'category', data: ageDist.map(d=>d.name)},
       yAxis: {type:'value'},
-      series: [{data: ageDist.map(d=>d.value), type:'bar'}]
+      series: [{data: ageDist.map(d=>d.value), type:'bar',itemStyle: {
+      color: '#1e56a0'  // 蓝色
+    }
+               }]
     });
 
     echarts.init(document.getElementById('genderPie')).setOption({
@@ -93,7 +96,10 @@ fetch("data/coffee.json")
         data:[
           {name:"Male", value:genderCount.Male},
           {name:"Female", value:genderCount.Female}
-        ]
+        ],
+        itemStyle: {
+      color: '#1e56a0'  // 蓝色
+    }
       }]
     });
 
@@ -102,7 +108,9 @@ fetch("data/coffee.json")
       xAxis:{type:'category', data:Object.keys(countryCount)},
       yAxis:{type:'value'},
       dataZoom:[{type:"slider", show:true}],
-      series:[{type:'bar', data:Object.values(countryCount)}]
+      series:[{type:'bar', data:Object.values(countryCount),itemStyle: {
+      color: '#1e56a0'  // 蓝色
+    }}]
     });
 
     echarts.init(document.getElementById('occupationBar')).setOption({
