@@ -1,116 +1,108 @@
 <!DOCTYPE html>
 <html lang="zh">
 <head>
-<meta charset="UTF-8">
-<title>健康分析</title>
-<link rel="stylesheet" href="css/style.css">
-<script src="js/echarts.min.js"></script>
+  <meta charset="UTF-8">
+  <title>咖啡与健康可视化</title>
+  <script src="https://cdn.jsdelivr.net/npm/echarts@5/dist/echarts.min.js"></script>
+  <style>
+    body {
+      margin: 0;
+      padding: 0;
+      font-family: "Microsoft YaHei", sans-serif;
+      background: #f5f7fa;
+    }
+    h1 {
+      text-align: center;
+      margin: 20px 0;
+      color: #333;
+    }
+    #main {
+      width: 95%;
+      height: 700px; /* 图表更大 */
+      margin: 0 auto;
+    }
+  </style>
 </head>
 <body>
-<header>
-    <h1>☕ Global Coffee Health</h1>
-    <nav>
-        <a href="index.html">首页</a>
-        <a href="basic.html">受调查者基本情况</a>
-        <a href="health.html">健康分析</a>
-        <a href="map.html">全球地图</a>
-        <a href="category.html">分类分析</a>
-    </nav>
-</header>
+  <h1>咖啡与健康指标分布</h1>
+  <div id="main"></div>
 
-<div class="container">
-    <div class="sidebar">
-        <label>选择健康指标</label>
-        <select id="health-metric">
-            <option value="Sleep_Hours">睡眠时长</option>
-            <option value="Stress_Level">压力水平</option>
-            <option value="Heart_Rate">心率</option>
-            <option value="BMI">BMI</option>
-        </select>
-    </div>
-    <div id="polar-chart" class="chart-container"></div>
-</div>
+  <script>
+    fetch("data/coffee.json")  // <-- 这里换成你的路径
+      .then(res => res.json())
+      .then(data => {
+        // 1. 提取国家和因子
+        const countries = [...new Set(data.map(d => d.Country))];
+        const factors = [...new Set(data.map(d => d.Factor))];
 
-<script>
-let polarChart = echarts.init(document.getElementById('polar-chart'));
-let coffeeData = [];
+        // 2. 程度型文字转数值
+        const levelMap = { "低": 1, "中": 2, "高": 3 };
 
-// 压力类别
-const stressLevels = ["Low","Medium","High"];
+        // 3. 构造矩阵
+        const matrix = factors.map(factor => {
+          return countries.map(country => {
+            const item = data.find(d => d.Country === country && d.Factor === factor);
+            if (!item) return 0;
+            return typeof item.Value === "number"
+              ? item.Value
+              : (levelMap[item.Value] || 0);
+          });
+        });
 
-// 读取真实数据
-fetch('data/coffee.json')
-.then(res=>res.json())
-.then(data=>{
-    coffeeData = data;
-    renderPolar("Sleep_Hours");
-});
-
-// 渲染函数
-function renderPolar(metric) {
-    // 获取所有国家
-    let countries = [...new Set(coffeeData.map(d=>d.Country))];
-
-    // 判断是否是类别型
-    let isCategory = metric === "Stress_Level";
-
-    let seriesData = coffeeData.map(d=>{
-        let val = d[metric];
-        let idxX = countries.indexOf(d.Country);
-        let idxY;
-
-        if (isCategory) {
-            idxY = stressLevels.indexOf(val);
-        } else {
-            idxY = val; // 数值型直接用
-        }
-
-        return [idxY, idxX, val];
-    });
-
-    let option = {
-        title: {
-            text: `国家与 ${metric} 分布`,
-            left: 'center'
-        },
-        polar: {},
-        tooltip: {
-            formatter: function (params) {
-                let country = countries[params.value[1]];
-                let label = isCategory ? stressLevels[params.value[0]] : params.value[0];
-                return `${country}<br/>${metric}: ${label}<br/>值: ${params.value[2]}`;
+        // 4. 绘图
+        const chartDom = document.getElementById('main');
+        const myChart = echarts.init(chartDom);
+        const option = {
+          tooltip: {
+            position: 'top',
+            formatter: (p) => {
+              const val = p.value[2];
+              return `${p.value[1]} - ${p.value[0]}<br/>数值: ${val}`;
             }
-        },
-        angleAxis: {
+          },
+          grid: {
+            left: '10%',
+            right: '10%',
+            top: '10%',
+            bottom: '15%'
+          },
+          xAxis: {
             type: 'category',
             data: countries,
-            boundaryGap: false,
-            axisLabel: { rotate: 45 }
-        },
-        radiusAxis: isCategory ? {
+            axisLabel: { rotate: 45, interval: 0 }
+          },
+          yAxis: {
             type: 'category',
-            data: stressLevels
-        } : {
-            type: 'value',
-            name: metric
-        },
-        series: [{
-            name: '健康分布',
-            type: 'scatter',
-            coordinateSystem: 'polar',
-            symbolSize: val => isCategory ? 10 + Math.random()*10 : Math.max(5, val[2]/3),
-            itemStyle: { color: '#42a5f5' },
-            data: seriesData
-        }]
-    };
+            data: factors
+          },
+          visualMap: {
+            min: 0,
+            max: Math.max(...matrix.flat()),
+            calculable: true,
+            orient: 'horizontal',
+            left: 'center',
+            bottom: '0%'
+          },
+          series: [{
+            name: '健康指标',
+            type: 'heatmap',
+            data: matrix.flatMap((row, i) =>
+              row.map((val, j) => [countries[j], factors[i], val])
+            ),
+            label: {
+              show: true
+            },
+            emphasis: {
+              itemStyle: {
+                shadowBlur: 10,
+                shadowColor: 'rgba(0, 0, 0, 0.5)'
+              }
+            }
+          }]
+        };
 
-    polarChart.setOption(option);
-}
-
-// 下拉框事件
-document.getElementById('health-metric').addEventListener('change', e=>{
-  renderPolar(e.target.value);
-});
-</script>
+        myChart.setOption(option);
+      });
+  </script>
 </body>
 </html>
