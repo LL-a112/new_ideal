@@ -1,0 +1,226 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+  <meta charset="UTF-8">
+  <title>受调查组基本情况分析</title>
+  <script src="echarts.min.js"></script>
+  <style>
+    body {
+      font-family: "Microsoft YaHei", sans-serif;
+      background: #f9f9f9;
+      margin: 20px;
+    }
+    h1 {
+      text-align: center;
+      color: #222;
+    }
+    h2 {
+      text-align: center;
+      margin-top: 40px;
+      color: #333;
+    }
+    .chart-container {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
+      gap: 20px;
+    }
+    .chart {
+      width: 600px;
+      height: 400px;
+      background: #fff;
+      border-radius: 12px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+      padding: 10px;
+    }
+  </style>
+</head>
+<body>
+
+  <h1>受调查组基本情况可视化</h1>
+
+  <!-- 人口特征 -->
+  <h2>1. 人口特征</h2>
+  <div class="chart-container">
+    <div id="ageDist" class="chart"></div>
+    <div id="genderPie" class="chart"></div>
+    <div id="ageGenderBar" class="chart"></div>
+  </div>
+
+  <!-- 地域与职业 -->
+  <h2>2. 地域与职业</h2>
+  <div class="chart-container">
+    <div id="countryBar" class="chart"></div>
+    <div id="occupationBar" class="chart"></div>
+    <div id="countryOccBar" class="chart"></div>
+  </div>
+
+  <!-- 生活习惯 -->
+  <h2>3. 基础生活习惯</h2>
+  <div class="chart-container">
+    <div id="smokingPie" class="chart"></div>
+    <div id="alcoholPie" class="chart"></div>
+    <div id="smokeDrinkBar" class="chart"></div>
+  </div>
+
+  <script>
+    // 加载 JSON 数据
+    fetch("data.json")
+      .then(response => response.json())
+      .then(data => {
+        // ---------------- 数据预处理 ----------------
+        // 年龄分布
+        let ages = data.map(d => d.Age);
+        let ageBins = [0,10,20,30,40,50,60,70,80];
+        let ageDist = ageBins.map((bin,i) => {
+          let count = ages.filter(a => a >= bin && a < (ageBins[i+1] || 100)).length;
+          return {name: `${bin}-${ageBins[i+1]||"以上"}`, value: count};
+        });
+
+        // 性别比例
+        let genderCount = {"Male":0, "Female":0};
+        data.forEach(d => {
+          if (d.Gender==="Male") genderCount.Male++;
+          else if (d.Gender==="Female") genderCount.Female++;
+        });
+
+        // 年龄 vs 性别
+        let maleAges = ages.filter((_,i)=>data[i].Gender==="Male");
+        let femaleAges = ages.filter((_,i)=>data[i].Gender==="Female");
+        let maleDist = ageBins.map((bin,i)=>maleAges.filter(a=>a>=bin && a<(ageBins[i+1]||100)).length);
+        let femaleDist = ageBins.map((bin,i)=>femaleAges.filter(a=>a>=bin && a<(ageBins[i+1]||100)).length);
+
+        // 国家分布
+        let countryCount = {};
+        data.forEach(d => {
+          countryCount[d.Country] = (countryCount[d.Country]||0)+1;
+        });
+
+        // 职业分布
+        let occCount = {};
+        data.forEach(d => {
+          occCount[d.Occupation] = (occCount[d.Occupation]||0)+1;
+        });
+
+        // 国家 vs 职业
+        let countryOcc = {};
+        data.forEach(d=>{
+          if(!countryOcc[d.Country]) countryOcc[d.Country] = {};
+          countryOcc[d.Country][d.Occupation] = (countryOcc[d.Country][d.Occupation]||0)+1;
+        });
+
+        // 吸烟饮酒
+        let smokingCount = {Yes:0, No:0};
+        let alcoholCount = {Yes:0, No:0};
+        let smokeDrink = {"Smoke&Drink":0,"SmokeOnly":0,"DrinkOnly":0,"Neither":0};
+        data.forEach(d=>{
+          if(d.Smoking==1) smokingCount.Yes++; else smokingCount.No++;
+          if(d.Alcohol_Consumption==1) alcoholCount.Yes++; else alcoholCount.No++;
+          if(d.Smoking==1 && d.Alcohol_Consumption==1) smokeDrink["Smoke&Drink"]++;
+          else if(d.Smoking==1) smokeDrink["SmokeOnly"]++;
+          else if(d.Alcohol_Consumption==1) smokeDrink["DrinkOnly"]++;
+          else smokeDrink["Neither"]++;
+        });
+
+        // ---------------- 图表绘制 ----------------
+
+        // 年龄分布
+        echarts.init(document.getElementById('ageDist')).setOption({
+          title: {text:"年龄分布", left:"center"},
+          xAxis: {type:'category', data: ageDist.map(d=>d.name)},
+          yAxis: {type:'value'},
+          series: [{data: ageDist.map(d=>d.value), type:'bar'}]
+        });
+
+        // 性别比例
+        echarts.init(document.getElementById('genderPie')).setOption({
+          title: {text:"性别比例", left:"center"},
+          series: [{
+            type:'pie',
+            radius:'60%',
+            data: [
+              {name:"Male", value:genderCount.Male},
+              {name:"Female", value:genderCount.Female}
+            ]
+          }]
+        });
+
+        // 年龄 vs 性别
+        echarts.init(document.getElementById('ageGenderBar')).setOption({
+          title: {text:"年龄 vs 性别", left:"center"},
+          tooltip: {trigger:"axis"},
+          legend: {data:["Male","Female"], top:30},
+          xAxis: {type:'category', data: ageBins.map((b,i)=>`${b}-${ageBins[i+1]||"以上"}`)},
+          yAxis: {type:'value'},
+          series: [
+            {name:"Male", type:'bar', stack:"gender", data:maleDist},
+            {name:"Female", type:'bar', stack:"gender", data:femaleDist}
+          ]
+        });
+
+        // 国家分布
+        echarts.init(document.getElementById('countryBar')).setOption({
+          title: {text:"国家分布", left:"center"},
+          xAxis: {type:'category', data:Object.keys(countryCount)},
+          yAxis: {type:'value'},
+          dataZoom:[{type:"slider", show:true}],
+          series:[{type:'bar', data:Object.values(countryCount)}]
+        });
+
+        // 职业分布
+        echarts.init(document.getElementById('occupationBar')).setOption({
+          title: {text:"职业分布", left:"center"},
+          xAxis: {type:'category', data:Object.keys(occCount)},
+          yAxis: {type:'value'},
+          dataZoom:[{type:"slider", show:true}],
+          series:[{type:'bar', data:Object.values(occCount)}]
+        });
+
+        // 国家 vs 职业 (堆叠柱状)
+        let countries = Object.keys(countryOcc);
+        let occupations = Array.from(new Set(data.map(d=>d.Occupation)));
+        echarts.init(document.getElementById('countryOccBar')).setOption({
+          title:{text:"国家 vs 职业", left:"center"},
+          tooltip:{trigger:"axis"},
+          legend:{data:occupations, top:30},
+          xAxis:{type:'category', data:countries},
+          yAxis:{type:'value'},
+          dataZoom:[{type:"slider", show:true}],
+          series: occupations.map(o=>({
+            name:o, type:'bar',
+            stack:"occ",
+            data:countries.map(c=>(countryOcc[c][o]||0))
+          }))
+        });
+
+        // 吸烟
+        echarts.init(document.getElementById('smokingPie')).setOption({
+          title:{text:"吸烟情况", left:"center"},
+          series:[{
+            type:'pie', radius:"60%",
+            data:[{name:"Yes", value:smokingCount.Yes},{name:"No", value:smokingCount.No}]
+          }]
+        });
+
+        // 饮酒
+        echarts.init(document.getElementById('alcoholPie')).setOption({
+          title:{text:"饮酒情况", left:"center"},
+          series:[{
+            type:'pie', radius:"60%",
+            data:[{name:"Yes", value:alcoholCount.Yes},{name:"No", value:alcoholCount.No}]
+          }]
+        });
+
+        // 吸烟 vs 饮酒
+        echarts.init(document.getElementById('smokeDrinkBar')).setOption({
+          title:{text:"吸烟 vs 饮酒", left:"center"},
+          xAxis:{type:"category", data:Object.keys(smokeDrink)},
+          yAxis:{type:"value"},
+          series:[{type:"bar", data:Object.values(smokeDrink)}]
+        });
+
+      });
+  </script>
+
+</body>
+</html>
