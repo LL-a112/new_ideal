@@ -15,13 +15,15 @@
     }
     h1 {
       text-align: center;
-      margin: 40px 0 30px 0; /* 标题与图的间距增大 */
-      color: #333;
-      font-size: 26px;
+      margin: 50px 0 40px 0; /* 标题与图的间距再拉大 */
+      color: #222;
+      font-size: 28px;
+      font-weight: bold;
+      letter-spacing: 2px;
     }
     #main {
       width: 95%;
-      height: 750px; /* 图表更大 */
+      height: 800px; /* 图表更大 */
       margin: 0 auto;
     }
   </style>
@@ -34,12 +36,11 @@
     fetch("synthetic_coffee_health_10000.json")
       .then(res => res.json())
       .then(data => {
-        // 假设字段格式：{ Country: "USA", Factor: "睡眠质量", Value: "高" }
         const countries = [...new Set(data.map(d => d.Country))];
         const factors = [...new Set(data.map(d => d.Factor))];
 
-        // 将文字型程度转化为数值映射
-        const levelMap = { "Low": 1, "Medium": 2, "High": 3 };
+        // 将文字型程度转化为数值映射（支持中英文）
+        const levelMap = { "Low": 1, "Medium": 2, "High": 3, "低": 1, "中": 2, "高": 3 };
         const matrix = factors.map(f => {
           return countries.map(c => {
             const item = data.find(d => d.Country === c && d.Factor === f);
@@ -58,7 +59,7 @@
             position: 'top',
             formatter: (p) => {
               const val = p.value[2];
-              return `${p.value[1]} - ${p.value[0]}<br/>数值: ${val}`;
+              return `<b>${p.value[1]}</b> - ${p.value[0]}<br/>数值: <b>${val}</b>`;
             }
           },
           grid: {
@@ -84,7 +85,7 @@
             left: 'center',
             bottom: '2%',
             inRange: {
-              color: ['#e0f7fa','#80deea','#26c6da','#00838f','#004d40'] // 多色渐变
+              color: ['#ffffcc','#ffeda0','#feb24c','#fd8d3c','#f03b20','#bd0026'] // 暖色渐变
             }
           },
           series: [{
@@ -95,13 +96,14 @@
             ),
             label: {
               show: true,
-              color: '#000'
+              color: '#000',
+              fontSize: 11
             },
             emphasis: {
               itemStyle: {
-                borderColor: '#333',
+                borderColor: '#444',
                 borderWidth: 1,
-                shadowBlur: 10,
+                shadowBlur: 12,
                 shadowColor: 'rgba(0, 0, 0, 0.5)'
               }
             }
