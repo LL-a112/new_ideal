@@ -11,13 +11,12 @@
     <h1>☕ Global Coffee Health</h1>
     <nav>
         <a href="index.html">首页</a>
-         <a href="basic.html">受调查者基本情况</a>
+        <a href="basic.html">受调查者基本情况</a>
         <a href="health.html">健康分析</a>
         <a href="map.html">全球地图</a>
         <a href="category.html">分类分析</a>
     </nav>
 </header>
-
 
 <div class="container">
     <div class="sidebar">
@@ -29,41 +28,78 @@
             <option value="BMI">BMI</option>
         </select>
     </div>
-    <div id="scatter-chart" class="chart-container"></div>
+    <div id="scatter-chart" class="chart-container" style="height: 90vh;"></div>
 </div>
 
 <script>
 let scatterChart = echarts.init(document.getElementById('scatter-chart'));
 let coffeeData = [];
 
+// 生成 Punch Card 所需的小时和天
+const hours = [
+    '12a','1a','2a','3a','4a','5a','6a',
+    '7a','8a','9a','10a','11a',
+    '12p','1p','2p','3p','4p','5p',
+    '6p','7p','8p','9p','10p','11p'
+];
+const days = [
+    'Saturday','Friday','Thursday',
+    'Wednesday','Tuesday','Monday','Sunday'
+];
+
+// 这里用 coffee.json 生成 Punch Card 数据
 fetch('data/coffee.json')
-.then(res=>res.json())
-.then(data=>{
+.then(res => res.json())
+.then(data => {
     coffeeData = data;
-    renderScatter('Sleep_Hours');
+    renderPunchCard();
 });
 
+// 下拉选择健康指标暂时保留（可按需切换）
 document.getElementById('health-metric').addEventListener('change', e=>{
-    renderScatter(e.target.value);
+    renderPunchCard();
 });
 
-function renderScatter(metric){
-    let stressMapping = {'Low':1,'Medium':2,'High':3};
-    let seriesData = coffeeData.map(d=>{
-        let val = metric=='Stress_Index' ? stressMapping[d.Stress_Level] : d[metric];
-        return {
-            value: [d.Coffee_Intake, val],
-            name: `${d.Country} / ${d.Occupation}`,
-            symbolSize: Math.max(5,d.Age/5),
-            itemStyle: {color: d.Gender=="Male" ? "#FF5722" : "#2196F3"}
-        };
+function renderPunchCard(){
+    // 生成 Punch Card 数据
+    // 假设随机分布：day 0-6, hour 0-23, value: Coffee_Intake
+    const punchData = coffeeData.map(d => {
+        // dayIndex 随机 0-6，用实际可替换为时间相关字段
+        let dayIndex = Math.floor(Math.random()*7);
+        let hourIndex = Math.floor(Math.random()*24);
+        return [dayIndex, hourIndex, d.Coffee_Intake];
     });
-    scatterChart.setOption({
-        tooltip:{formatter:'{b}<br/>咖啡: {c[0]}<br/>指标: {c[1]}'},
-        xAxis:{name:'每日咖啡摄入量'},
-        yAxis:{name:metric},
-        series:[{type:'scatter',data:seriesData}]
-    });
+
+    const option = {
+        title: { text: '咖啡摄入时间分布 Punch Card' },
+        tooltip: {
+            formatter: function(params){
+                return params.value[2] + ' cups at ' + hours[params.value[1]] + ' on ' + days[params.value[0]];
+            }
+        },
+        angleAxis: {
+            type: 'category',
+            data: hours,
+            boundaryGap: false,
+            axisLine: { show: false }
+        },
+        radiusAxis: {
+            type: 'category',
+            data: days,
+            axisLine: { show: false },
+            axisLabel: { rotate: 45 }
+        },
+        polar: {},
+        series: [{
+            name: 'Punch Card',
+            type: 'scatter',
+            coordinateSystem: 'polar',
+            symbolSize: function(val){ return val[2]*2; },
+            data: punchData
+        }]
+    };
+
+    scatterChart.setOption(option);
 }
 </script>
 </body>
