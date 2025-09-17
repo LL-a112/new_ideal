@@ -33,7 +33,7 @@
   <div id="main"></div>
 
   <script>
-    fetch("synthetic_coffee_health_10000.json")
+    fetch("data/coffee.json")
       .then(res => res.json())
       .then(data => {
         const countries = [...new Set(data.map(d => d.Country))];
