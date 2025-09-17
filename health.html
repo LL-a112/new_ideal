@@ -35,7 +35,7 @@
     }
     .chart-container {
       width: 95%;
-      height: 750px;
+      height: 800px;
       margin: 40px auto;
       background: #fff;
       padding: 20px;
@@ -48,11 +48,11 @@
 <header>
   <h1>☕ Global Coffee Health</h1>
   <nav>
-      <a href="index.html">首页</a>
-      <a href="basic.html">受调查者基本情况</a>
-      <a href="health.html">健康分析</a>
-      <a href="map.html">全球地图</a>
-      <a href="category.html">分类分析</a>
+    <a href="index.html">首页</a>
+    <a href="basic.html">受调查者基本情况</a>
+    <a href="health.html">健康分析</a>
+    <a href="map.html">全球地图</a>
+    <a href="category.html">分类分析</a>
   </nav>
 </header>
 
@@ -63,26 +63,28 @@ fetch("data/coffee.json")
   .then(res => res.json())
   .then(data => {
     const countries = [...new Set(data.map(d => d.Country))];
-    const factors = ["Sleep_Hours", "BMI", "Stress_Index"]; // 关键指标
+    const factors = ["Coffee_Intake","Caffeine_mg","Sleep_Hours","BMI","Heart_Rate","Stress_Index","Physical_Activity_Hours"]; // 关键指标
+    const levelMap = { "Low": 1, "Medium": 2, "High": 3, "低": 1, "中": 2, "高": 3, "Good":3, "Average":2, "Poor":1 }; // 支持程度映射
 
-    const levelMap = { "Low": 1, "Medium": 2, "High": 3, "低": 1, "中": 2, "高": 3 };
+    const colors = ["#ff6f61","#ffb74d","#4db6ac","#7986cb","#aed581","#f06292","#ba68c8"];
 
-    // 构造每个指标的数据，每个指标一个series
+    // 每个指标生成一组series
     const series = factors.map((factor, fi) => {
-      const sData = countries.map((country, ci) => {
-        const item = data.find(d => d.Country === country);
-        let val = 0;
-        if(item && item[factor] !== undefined) {
-          val = typeof item[factor] === "number" ? item[factor] : (levelMap[item[factor]] || 0);
-        }
-        return [ci, val]; // [角度轴索引, 半径值]
+      const sData = [];
+      data.forEach(item => {
+        const ci = countries.indexOf(item.Country);
+        if(ci === -1) return;
+        let val = item[factor];
+        if(typeof val !== "number") val = levelMap[val] || 0;
+        sData.push([ci, val]);
       });
       return {
         name: factor,
         type: 'scatter',
         coordinateSystem: 'polar',
         data: sData,
-        symbolSize: val => 8, // 可以固定大小，也可以根据数值调整
+        symbolSize: 8,
+        itemStyle: { color: colors[fi % colors.length] }
       };
     });
 
@@ -94,27 +96,26 @@ fetch("data/coffee.json")
         top: 10
       },
       tooltip: {
-        formatter: function(params) {
-          return `${countries[params.value[0]]} - ${params.seriesName}: ${params.value[1]}`;
+        formatter: (params) => {
+          return `${countries[params.value[0]]} - ${params.seriesName}<br/>数值: ${params.value[1]}`;
         }
-      },
-      angleAxis: {
-        type: 'category',
-        data: countries,
-        boundaryGap: false,
-        axisLabel: { rotate: 45 }
-      },
-      radiusAxis: {
-        type: 'value',
       },
       legend: {
         data: factors,
-        top: 40
+        top: 40,
+        left: 'center'
       },
       polar: {},
+      angleAxis: {
+        type: 'category',
+        data: countries,
+        axisLabel: { rotate: 45 }
+      },
+      radiusAxis: {
+        type: 'value'
+      },
       series: series
     };
-
     polarChart.setOption(polarOption);
   });
 </script>
