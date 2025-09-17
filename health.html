@@ -100,41 +100,42 @@ fetch("data/coffee.json")
    
     const select = document.getElementById('countrySelect');
 
-    function renderRadar(country) {
-      const items = data.filter(d => d.Country === country);
-      if(items.length === 0) return;
+function renderRadar(country) {
+  const countryMap = {
+    "United States": "USA",
+    "South Korea": "South Korea",
+  };
 
-      // 取平均值
-      const avgSleep = items.reduce((a,b)=>a+b.Sleep_Hours,0)/items.length;
-      const avgBMI = items.reduce((a,b)=>a+b.BMI,0)/items.length;
-      const avgStress = items.reduce((a,b)=>a+b.Stress_Index,0)/items.length;
-      const avgCaffeine = items.reduce((a,b)=>a+b.Caffeine_mg,0)/items.length;
+  const items = data.filter(d => (countryMap[d.Country] || d.Country) === country);
+  if(items.length === 0) return;
 
-      chart.setOption({
-        title: { text: country + ' 咖啡与健康指标', left: 'center', top: 10 },
-        tooltip: {},
-        radar: { indicator: indicators, shape: 'polygon' },
-        series: [{
-          type: 'radar',
-          data: [{
-            value: [avgSleep, avgBMI, avgStress, avgCaffeine],
-            name: country,
-            areaStyle: { color: 'rgba(79, 129, 189, 0.3)' },
-            lineStyle: { color: '#4f81bd', width: 2 },
-            symbol: 'circle',
-            symbolSize: 8
-          }]
-        }]
-      };}
-     
+  const avgSleep = items.reduce((a,b)=>a+b.Sleep_Hours,0)/items.length;
+  const avgBMI = items.reduce((a,b)=>a+b.BMI,0)/items.length;
+  const avgStress = items.reduce((a,b)=>a+b.Stress_Index,0)/items.length;
+  const avgCaffeine = items.reduce((a,b)=>a+b.Caffeine_mg,0)/items.length;
 
-    // 初始显示第一个国家
-   
-    renderRadar(select.value);
-
-    // 下拉切换
-    select.addEventListener('change', e => renderRadar(e.target.value));
+  chart.setOption({
+    title: { text: country + ' 咖啡与健康指标', left: 'center', top: 10 },
+    tooltip: {},
+    radar: { indicator: indicators, shape: 'polygon' },
+    series: [{
+      type: 'radar',
+      data: [{
+        value: [avgSleep, avgBMI, avgStress, avgCaffeine],
+        name: country,
+        areaStyle: { color: 'rgba(79, 129, 189, 0.3)' },
+        lineStyle: { color: '#4f81bd', width: 2 },
+        symbol: 'circle',
+        symbolSize: 8
+      }]
+    }]
   });
+}
+
+// 初始显示
+renderRadar(select.value);
+select.addEventListener('change', e => renderRadar(e.target.value));
+  }
 </script>
 
 </body>
