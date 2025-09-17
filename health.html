@@ -33,14 +33,23 @@
     header nav a:hover {
       color: #00838f;
     }
+    .controls {
+      width: 95%;
+      margin: 20px auto;
+      text-align: center;
+    }
     .chart-container {
       width: 95%;
       height: 800px;
-      margin: 40px auto;
+      margin: 20px auto 40px auto;
       background: #fff;
       padding: 20px;
       box-shadow: 0 2px 12px rgba(0,0,0,0.1);
       border-radius: 8px;
+    }
+    select {
+      font-size: 16px;
+      padding: 5px 10px;
     }
   </style>
 </head>
@@ -56,6 +65,15 @@
   </nav>
 </header>
 
+<div class="controls">
+  <label for="factorSelect">选择指标：</label>
+  <select id="factorSelect">
+    <option value="Sleep_Hours">Sleep Hours</option>
+    <option value="BMI">BMI</option>
+    <option value="Stress_Index">Stress Index</option>
+  </select>
+</div>
+
 <div class="chart-container" id="polar"></div>
 
 <script>
@@ -63,63 +81,67 @@ fetch("data/coffee.json")
   .then(res => res.json())
   .then(data => {
     const countries = [...new Set(data.map(d => d.Country))];
-    const factors = ["Sleep_Hours","BMI","Stress_Index"]; // 关键指标
-    const levelMap = { "Low": 1, "Medium": 2, "High": 3 }; // 支持程度映射
+    const levelMap = { "Low": 1, "Medium": 2, "High": 3 }; // 文字程度映射
+    const colors = ["#ff6f61","#4db6ac","#7986cb"];
 
-    const colors = ["#ff6f61","#ffb74d","#4db6ac","#7986cb","#aed581","#f06292","#ba68c8"];
+    const polarChart = echarts.init(document.getElementById('polar'));
 
-    // 每个指标生成一组series
-    const series = factors.map((factor, fi) => {
-      const sData = [];
+    function renderPolar(factor) {
+      // 构造极坐标数据
+      const seriesData = [];
       data.forEach(item => {
         const ci = countries.indexOf(item.Country);
         if(ci === -1) return;
         let val = item[factor];
         if(typeof val !== "number") val = levelMap[val] || 0;
-        sData.push([ci, val]);
+        seriesData.push([ci, val]);
       });
-      return {
-        name: factor,
-        type: 'scatter',
-        coordinateSystem: 'polar',
-        data: sData,
-        symbolSize: 8,
-        itemStyle: { color: colors[fi % colors.length] }
+
+      // 自动计算最大值，让图表自适应
+      const maxVal = Math.max(...seriesData.map(d=>d[1])) * 1.2;
+
+      const option = {
+        title: {
+          text: factor + ' 极坐标分布',
+          left: 'center',
+          top: 10
+        },
+        tooltip: {
+          formatter: (params) => {
+            return `${countries[params.value[0]]} - ${factor}<br/>数值: ${params.value[1]}`;
+          }
+        },
+        polar: {},
+        angleAxis: {
+          type: 'category',
+          data: countries,
+          axisLabel: { rotate: 45 }
+        },
+        radiusAxis: {
+          type: 'value',
+          min: 0,
+          max: maxVal
+        },
+        series: [{
+          name: factor,
+          type: 'scatter',
+          coordinateSystem: 'polar',
+          data: seriesData,
+          symbolSize: val => val[1]*2 + 5,
+          itemStyle: { color: colors[0] }
+        }]
       };
+
+      polarChart.setOption(option);
+    }
+
+    // 初始化显示第一个指标
+    renderPolar("Sleep_Hours");
+
+    // 下拉菜单交互
+    document.getElementById('factorSelect').addEventListener('change', (e) => {
+      renderPolar(e.target.value);
     });
-
-    const polarChart = echarts.init(document.getElementById('polar'));
-    const polarOption = {
-      title: {
-        text: '关键健康指标极坐标分布',
-        left: 'center',
-        top: 10
-      },
-      tooltip: {
-        formatter: (params) => {
-          return `${countries[params.value[0]]} - ${params.seriesName}<br/>数值: ${params.value[1]}`;
-        }
-      },
-      legend: {
-        data: factors,
-        top: 40,
-        left: 'center'
-      },
-      polar: {},
-      angleAxis: {
-        type: 'category',
-        data: countries,
-        axisLabel: { rotate: 45 }
-      },
-      radiusAxis: {
-       type: 'value',
-       min: 0,
-       max: 5 // Sleep_Hours最大值大概7.5，BMI最大可能30，Stress_Index 0-3，可以按指标设置
-
-      },
-      series: series
-    };
-    polarChart.setOption(polarOption);
   });
 </script>
 </body>
