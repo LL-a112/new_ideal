@@ -45,80 +45,93 @@
   </style>
 </head>
 <body>
-  <header>
-    <h1>☕ Global Coffee Health</h1>
-    <nav>
-        <a href="index.html">首页</a>
-        <a href="basic.html">受调查者基本情况</a>
-        <a href="health.html">健康分析</a>
-        <a href="map.html">全球地图</a>
-        <a href="category.html">分类分析</a>
-    </nav>
-  </header>
+<header>
+  <h1>☕ Global Coffee Health</h1>
+  <nav>
+      <a href="index.html">首页</a>
+      <a href="basic.html">受调查者基本情况</a>
+      <a href="health.html">健康分析</a>
+      <a href="map.html">全球地图</a>
+      <a href="category.html">分类分析</a>
+  </nav>
+</header>
 
-  <div class="chart-container" id="polar"></div>
+<div class="chart-container" id="polar"></div>
 
-  <script>
-    fetch("data/coffee.json")
-      .then(res => res.json())
-      .then(data => {
-        const countries = [...new Set(data.map(d => d.Country))];
-        const factors = [...new Set(data.map(d => d.Factor))];
+<script>
+fetch("data/coffee.json")
+  .then(res => res.json())
+  .then(data => {
+    const countries = [...new Set(data.map(d => d.Country))];
+    const factors = ["Sleep_Hours", "BMI", "Stress_Index"];
 
-        // 程度型转数值映射
-        const levelMap = { "Low": 1, "Medium": 2, "High": 3};
+    // 将 Stress_Level 等类别指标映射为数值（可扩展）
+    const levelMap = { "Low": 1, "Medium": 2, "High": 3, "低": 1, "中": 2, "高": 3 };
 
-        // 构造极坐标散点图数据
-        const polarData = [];
-        factors.forEach((f, fi) => {
-          countries.forEach((c, ci) => {
-            const item = data.find(d => d.Country === c && d.Factor === f);
-            const val = item
-              ? (typeof item.Value === "number" ? item.Value : (levelMap[item.Value] || 0))
-              : 0;
-            polarData.push([fi, ci, val]);
-          });
-        });
-
-        const polarChart = echarts.init(document.getElementById('polar'));
-        const polarOption = {
-          title: {
-            text: '健康指标极坐标分布',
-            left: 'center',
-            top: 10
-          },
-          tooltip: {
-            formatter: (params) => {
-              return `${countries[params.value[1]]} - ${factors[params.value[0]]}<br/>数值: ${params.value[2]}`;
-            }
-          },
-          polar: {},
-          angleAxis: {
-            type: 'category',
-            data: factors,
-            boundaryGap: false,
-            axisLine: { show: true }
-          },
-          radiusAxis: {
-            type: 'category',
-            data: countries,
-            axisLine: { show: true },
-            axisLabel: { rotate: 45 }
-          },
-          series: [{
-            name: '健康指标',
-            type: 'scatter',
-            coordinateSystem: 'polar',
-            symbolSize: (val) => val[2] * 2 + 4, // 最小点也可见
-            data: polarData,
-            animationDelay: (idx) => idx * 5,
-            itemStyle: {
-              color: '#ff6f61'
-            }
-          }]
-        };
-        polarChart.setOption(polarOption);
+    // 构造极坐标散点图数据
+    const polarData = [];
+    factors.forEach((factor, fi) => {
+      countries.forEach((country, ci) => {
+        const item = data.find(d => d.Country === country && d[factor] !== undefined);
+        let val = 0;
+        if(item) {
+          val = typeof item[factor] === "number" ? item[factor] : (levelMap[item[factor]] || 0);
+        }
+        polarData.push([fi, ci, val]);
       });
-  </script>
+    });
+
+    // 找到数据最大值用于点大小和颜色映射
+    const maxVal = Math.max(...polarData.map(d => d[2]));
+
+    const polarChart = echarts.init(document.getElementById('polar'));
+    const polarOption = {
+      title: {
+        text: '关键健康指标极坐标分布',
+        left: 'center',
+        top: 10
+      },
+      tooltip: {
+        formatter: (params) => {
+          return `${countries[params.value[1]]} - ${factors[params.value[0]]}<br/>数值: ${params.value[2]}`;
+        }
+      },
+      polar: {},
+      angleAxis: {
+        type: 'category',
+        data: factors,
+        boundaryGap: false,
+        axisLine: { show: true }
+      },
+      radiusAxis: {
+        type: 'category',
+        data: countries,
+        axisLine: { show: true },
+        axisLabel: { rotate: 45 }
+      },
+      visualMap: {
+        min: 0,
+        max: maxVal,
+        calculable: true,
+        orient: 'horizontal',
+        left: 'center',
+        bottom: '0%',
+        inRange: {
+          color: ['#ffe0b2','#ffb74d','#ff8a65','#d84315','#bf360c'] // 暖色渐变
+        }
+      },
+      series: [{
+        name: '关键指标',
+        type: 'scatter',
+        coordinateSystem: 'polar',
+        symbolSize: val => val[2] / maxVal * 20 + 4,
+        data: polarData,
+        animationDelay: idx => idx * 5
+      }]
+    };
+
+    polarChart.setOption(polarOption);
+  });
+</script>
 </body>
 </html>
