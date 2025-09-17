@@ -2,6 +2,7 @@
 <html lang="zh">
 <head>
 <meta charset="UTF-8">
+<link rel="stylesheet" href="css/style.css">
 <title>咖啡摄入与健康指标雷达图</title>
 <script src="js/echarts.min.js"></script>
 <style>
@@ -77,52 +78,63 @@ select:focus { outline: none; border-color: #00838f; box-shadow: 0 0 5px rgba(0,
 
 <script>
 fetch("data/coffee.json")
-.then(res => res.json())
-.then(data => {
+  .then(res => res.json())
+  .then(data => {
 
-  const indicators = [
-    { name: 'Sleep Hours', max: 12 },
-    { name: 'BMI', max: 40 },
-    { name: 'Stress Index', max: 5 },
-    { name: 'Caffeine mg', max: 500 }
-  ];
+    const indicators = [
+      { name: 'Sleep Hours', max: 12 },
+      { name: 'BMI', max: 40 },
+      { name: 'Stress Index', max: 5 },
+      { name: 'Caffeine mg', max: 500 }
+    ];
 
-  const chart = echarts.init(document.getElementById('radarChart'));
-  const select = document.getElementById('countrySelect');
+    const chart = echarts.init(document.getElementById('radarChart'));
 
-  function renderRadar(country) {
-    const countryMap = { "United States": "USA", "South Korea": "South Korea" };
-    const items = data.filter(d => (countryMap[d.Country] || d.Country) === country);
-    if(items.length === 0) return;
+    const caffeineGroups = [
+      { name: 'Low', min: 0, max: 150, color: '#ff6f61' },
+      { name: 'Medium', min: 151, max: 300, color: '#ffb74d' },
+      { name: 'High', min: 301, max: 1000, color: '#4db6ac' }
+    ];
 
-    const avgSleep = items.reduce((a,b)=>a+b.Sleep_Hours,0)/items.length;
-    const avgBMI = items.reduce((a,b)=>a+b.BMI,0)/items.length;
-    const avgStress = items.reduce((a,b)=>a+b.Stress_Index,0)/items.length;
-    const avgCaffeine = items.reduce((a,b)=>a+b.Caffeine_mg,0)/items.length;
+    function renderRadar(country) {
+      const countryData = data.filter(d => {
+        const countryMap = { "United States": "USA", "South Korea": "South Korea" };
+        return (countryMap[d.Country] || d.Country) === country;
+      });
 
-    chart.setOption({
-      title: { text: country + ' 咖啡与健康指标', left: 'center', top: 10 },
-      tooltip: {},
-      radar: { indicator: indicators, shape: 'polygon' },
-      series: [{
-        type: 'radar',
-        data: [{
+      const seriesData = caffeineGroups.map(group => {
+        const groupItems = countryData.filter(d => d.Caffeine_mg >= group.min && d.Caffeine_mg <= group.max);
+        if(groupItems.length === 0) return { value: [0,0,0,0], name: group.name, areaStyle:{color:'rgba(0,0,0,0)'}};
+
+        const avgSleep = groupItems.reduce((a,b)=>a+b.Sleep_Hours,0)/groupItems.length;
+        const avgBMI = groupItems.reduce((a,b)=>a+b.BMI,0)/groupItems.length;
+        const avgStress = groupItems.reduce((a,b)=>a+b.Stress_Index,0)/groupItems.length;
+        const avgCaffeine = groupItems.reduce((a,b)=>a+b.Caffeine_mg,0)/groupItems.length;
+
+        return {
           value: [avgSleep, avgBMI, avgStress, avgCaffeine],
-          name: country,
-          areaStyle: { color: 'rgba(79, 129, 189, 0.3)' },
-          lineStyle: { color: '#4f81bd', width: 2 },
+          name: group.name,
+          areaStyle: { color: group.color + '33' },
+          lineStyle: { color: group.color, width: 2 },
           symbol: 'circle',
-          symbolSize: 8
-        }]
-      }]
-    });
-  }
+          symbolSize: 6
+        };
+      });
 
-  // 初始显示
-  renderRadar(select.value);
-  select.addEventListener('change', e => renderRadar(e.target.value));
+      chart.setOption({
+        title: { text: country + ' 咖啡与健康指标', left: 'center', top: 10 },
+        tooltip: {},
+        radar: { indicator: indicators, shape: 'polygon' },
+        series: [{ type: 'radar', data: seriesData }]
+      });
+    }
 
-});
+    const select = document.getElementById('countrySelect');
+    renderRadar(select.value);
+
+    select.addEventListener('change', e => renderRadar(e.target.value));
+
+  });
 </script>
 
 </body>
