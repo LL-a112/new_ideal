@@ -65,8 +65,19 @@ fetch("data/coffee.json")
     const countries = [...new Set(data.map(d => d.Country))];
     const factors = ["Sleep_Hours","BMI","Stress_Index"]; // 关键指标
     const levelMap = { "Low": 1, "Medium": 2, "High": 3 }; // 支持程度映射
+    const colors = ["#ff6f61","#4db6ac","#7986cb"];
 
-    const colors = ["#ff6f61","#ffb74d","#4db6ac","#7986cb","#aed581","#f06292","#ba68c8"];
+    // 找到每个指标的最大值，用于归一化半径
+    const factorMax = {};
+    factors.forEach(f => {
+      let maxVal = 0;
+      data.forEach(item => {
+        let val = item[f];
+        if(typeof val !== "number") val = levelMap[val] || 0;
+        if(val > maxVal) maxVal = val;
+      });
+      factorMax[f] = maxVal;
+    });
 
     // 每个指标生成一组series
     const series = factors.map((factor, fi) => {
@@ -76,14 +87,16 @@ fetch("data/coffee.json")
         if(ci === -1) return;
         let val = item[factor];
         if(typeof val !== "number") val = levelMap[val] || 0;
-        sData.push([ci, val]);
+        // 归一化到0~10
+        const normalizedVal = (val / factorMax[factor]) * 10;
+        sData.push([ci, normalizedVal, val]); // 保存原始值在tooltip里
       });
       return {
         name: factor,
         type: 'scatter',
         coordinateSystem: 'polar',
         data: sData,
-        symbolSize: 8,
+        symbolSize: (val) => val[1]*3 + 5, // 点大小随归一化值变化
         itemStyle: { color: colors[fi % colors.length] }
       };
     });
@@ -97,7 +110,7 @@ fetch("data/coffee.json")
       },
       tooltip: {
         formatter: (params) => {
-          return `${countries[params.value[0]]} - ${params.seriesName}<br/>数值: ${params.value[1]}`;
+          return `${countries[params.value[0]]} - ${params.seriesName}<br/>数值: ${params.value[2]}`;
         }
       },
       legend: {
@@ -112,7 +125,9 @@ fetch("data/coffee.json")
         axisLabel: { rotate: 45 }
       },
       radiusAxis: {
-        type: 'value'
+        type: 'value',
+        min: 0,
+        max: 12
       },
       series: series
     };
