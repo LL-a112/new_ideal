@@ -12,27 +12,7 @@
       font-family: "Microsoft YaHei", sans-serif;
       background: #f5f7fa;
     }
-    header {
-      background: #fff;
-      padding: 15px 30px;
-      box-shadow: 0 2px 6px rgba(0,0,0,0.1);
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-    }
-    header h1 {
-      margin: 0;
-      font-size: 24px;
-    }
-    header nav a {
-      margin-left: 20px;
-      text-decoration: none;
-      color: #333;
-      font-weight: 500;
-    }
-    header nav a:hover {
-      color: #00838f;
-    }
+    
     .chart-container {
       width: 95%;
       height: 800px;
@@ -141,7 +121,7 @@ fetch("data/coffee.json")
           type: 'scatter',
           coordinateSystem: 'polar',
           data: sData,
-          symbolSize: 8,
+          symbolSize: 12,
           itemStyle: { color: colors[0] }
         }]
       };
