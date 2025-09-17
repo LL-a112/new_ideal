@@ -18,12 +18,30 @@
     box-shadow: 0 2px 12px rgba(0,0,0,0.1);
   }
   select {
-    margin-top: 20px;
-    padding: 6px 12px;
-    font-size: 16px;
-    border-radius: 6px;
-    border: 1px solid #ccc;
-  }
+  appearance: none;
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  padding: 8px 16px;
+  font-size: 16px;
+  border-radius: 8px;
+  border: 1px solid #ccc;
+  cursor: pointer;
+  width: 220px;
+  background-color: #fff;
+  background-image: url('data:image/svg+xml;utf8,<svg fill="%23333" height="10" viewBox="0 0 10 10" width="10" xmlns="http://www.w3.org/2000/svg"><polygon points="0,0 10,0 5,5"/></svg>');
+  background-repeat: no-repeat;
+  background-position: right 10px center;
+  transition: all 0.3s ease;
+}
+select:hover {
+  border-color: #00838f;
+}
+select:focus {
+  outline: none;
+  border-color: #00838f;
+  box-shadow: 0 0 5px rgba(0,131,143,0.5);
+}
+
 </style>
 </head>
 <body>
@@ -39,6 +57,7 @@
 </header>
 <h1>☕ 咖啡摄入与健康指标雷达图</h1>
 
+ <div class="select-container"
 <select id="countrySelect">
   <option value="Australia">Australia</option>
   <option value="Belgium">Belgium</option>
@@ -61,6 +80,7 @@
   <option value="UK">UK</option>
   <option value="USA">USA</option>
 </select>
+ </div>
 
 <div class="chart-container" id="radarChart"></div>
 
@@ -77,6 +97,7 @@ fetch("data/coffee.json")
     ];
 
     const chart = echarts.init(document.getElementById('radarChart'));
+    const select = document.getElementById('countrySelect');
 
     function renderRadar(country) {
       const items = data.filter(d => d.Country === country);
@@ -88,7 +109,7 @@ fetch("data/coffee.json")
       const avgStress = items.reduce((a,b)=>a+b.Stress_Index,0)/items.length;
       const avgCaffeine = items.reduce((a,b)=>a+b.Caffeine_mg,0)/items.length;
 
-      const option = {
+      chart.setOption({
         title: { text: country + ' 咖啡与健康指标', left: 'center', top: 10 },
         tooltip: {},
         radar: { indicator: indicators, shape: 'polygon' },
@@ -103,9 +124,8 @@ fetch("data/coffee.json")
             symbolSize: 8
           }]
         }]
-      };
-      chart.setOption(option);
-    }
+      };}
+     
 
     // 初始显示第一个国家
     const select = document.getElementById('countrySelect');
