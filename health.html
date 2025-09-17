@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <title>健康指标可视化</title>
-  <script src="https://cdn.jsdelivr.net/npm/echarts@5/dist/echarts.min.js"></script>
+  <script src="js/echarts.min.js"></script>
   <style>
     body {
       margin: 0;
@@ -13,12 +13,13 @@
     }
     h1 {
       text-align: center;
-      margin: 20px 0;
+      margin: 40px 0 30px 0; /* 标题与图的间距增大 */
       color: #333;
+      font-size: 26px;
     }
     #main {
       width: 95%;
-      height: 700px; /* 图表更大 */
+      height: 750px; /* 图表更大 */
       margin: 0 auto;
     }
   </style>
@@ -32,12 +33,11 @@
       .then(res => res.json())
       .then(data => {
         // 假设字段格式：{ Country: "USA", Factor: "睡眠质量", Value: "高" }
-        // 或者 Value 是数值
         const countries = [...new Set(data.map(d => d.Country))];
         const factors = [...new Set(data.map(d => d.Factor))];
 
         // 将文字型程度转化为数值映射
-        const levelMap = { "Low": 1, "Medium": 2, "High": 3 };
+        const levelMap = { "Low": 1, "Medium": 2, "High": 3, "低": 1, "中": 2, "高": 3 };
         const matrix = factors.map(f => {
           return countries.map(c => {
             const item = data.find(d => d.Country === c && d.Factor === f);
@@ -50,6 +50,7 @@
 
         const chartDom = document.getElementById('main');
         const myChart = echarts.init(chartDom);
+
         const option = {
           tooltip: {
             position: 'top',
@@ -59,9 +60,9 @@
             }
           },
           grid: {
-            left: '10%',
-            right: '10%',
-            top: '10%',
+            left: '12%',
+            right: '12%',
+            top: '5%',
             bottom: '15%'
           },
           xAxis: {
@@ -79,7 +80,10 @@
             calculable: true,
             orient: 'horizontal',
             left: 'center',
-            bottom: '0%'
+            bottom: '2%',
+            inRange: {
+              color: ['#e0f7fa','#80deea','#26c6da','#00838f','#004d40'] // 多色渐变
+            }
           },
           series: [{
             name: '健康指标',
@@ -88,10 +92,13 @@
               row.map((val, j) => [countries[j], factors[i], val])
             ),
             label: {
-              show: true
+              show: true,
+              color: '#000'
             },
             emphasis: {
               itemStyle: {
+                borderColor: '#333',
+                borderWidth: 1,
                 shadowBlur: 10,
                 shadowColor: 'rgba(0, 0, 0, 0.5)'
               }
