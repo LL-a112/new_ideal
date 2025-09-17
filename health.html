@@ -5,44 +5,6 @@
 <title>健康分析</title>
 <link rel="stylesheet" href="css/style.css">
 <script src="js/echarts.min.js"></script>
-<style>
-  body {
-    font-family: Arial, sans-serif;
-    background: #f5f7fa;
-    margin: 0;
-    padding: 0;
-  }
-  header {
-    background: #3949ab;
-    color: white;
-    padding: 15px;
-    text-align: center;
-  }
-  nav a {
-    color: white;
-    margin: 0 10px;
-    text-decoration: none;
-  }
-  .container {
-    display: flex;
-    margin: 20px;
-  }
-  .sidebar {
-    width: 200px;
-    padding: 10px;
-    background: #fff;
-    border-radius: 10px;
-    margin-right: 20px;
-    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
-  }
-  .chart-container {
-    flex: 1;
-    height: 600px;
-    background: #fff;
-    border-radius: 10px;
-    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
-  }
-</style>
 </head>
 <body>
 <header>
@@ -61,7 +23,7 @@
         <label>选择健康指标</label>
         <select id="health-metric">
             <option value="Sleep_Hours">睡眠时长</option>
-            <option value="Stress_Index">压力指数</option>
+            <option value="Stress_Level">压力水平</option>
             <option value="Heart_Rate">心率</option>
             <option value="BMI">BMI</option>
         </select>
@@ -72,75 +34,86 @@
 <script>
 let polarChart = echarts.init(document.getElementById('polar-chart'));
 
-// 示例国家
+// 模拟更多国家
 const countries = [
-  'China','USA','UK','France','Germany','Brazil','India'
-];
-// 示例程度
-const levels = [
-  'Low','Medium','High'
+  "China","USA","UK","France","Germany","Brazil","India",
+  "Japan","Canada","Australia","Russia","Italy","Spain",
+  "South Korea","Mexico","Netherlands","Sweden","Norway"
 ];
 
-// 生成模拟数据： [levelIndex, countryIndex, value]
-let data = [];
-for (let i = 0; i < levels.length; i++) {
-  for (let j = 0; j < countries.length; j++) {
-    data.push([i, j, Math.round(Math.random() * 20)]);
-  }
-}
+// 类别映射
+const stressLevels = ["Low","Medium","High"];
 
-let option = {
-  title: {
-    text: '国家与健康程度分布',
-    left: 'center'
-  },
-  legend: {
-    data: ['健康分布'],
-    left: 'right'
-  },
-  polar: {},
-  tooltip: {
-    formatter: function (params) {
-      return (
-        params.value[2] +
-        ' 个体<br/>国家: ' +
-        countries[params.value[1]] +
-        '<br/>程度: ' +
-        levels[params.value[0]]
-      );
-    }
-  },
-  angleAxis: {
-    type: 'category',
-    data: countries,
-    boundaryGap: false,
-    splitLine: { show: true },
-    axisLine: { show: false }
-  },
-  radiusAxis: {
-    type: 'category',
-    data: levels,
-    axisLine: { show: false },
-    axisLabel: { rotate: 0 }
-  },
-  series: [
-    {
-      name: '健康分布',
-      type: 'scatter',
-      coordinateSystem: 'polar',
-      symbolSize: function (val) {
-        return val[2] * 2;
-      },
-      data: data,
-      itemStyle: { color: '#42a5f5' },
-      animationDelay: function (idx) {
-        return idx * 10;
+// 模拟数据
+function generateData(metric) {
+  let data = [];
+  for (let i = 0; i < countries.length; i++) {
+    if (metric === "Stress_Level") {
+      for (let j = 0; j < stressLevels.length; j++) {
+        data.push([j, i, Math.round(Math.random() * 20)]);
+      }
+    } else {
+      for (let j = 0; j < 5; j++) { // 随机 5 段数值
+        let value = Math.round(Math.random() * 100);
+        data.push([j, i, value]);
       }
     }
-  ]
-};
+  }
+  return data;
+}
 
-polarChart.setOption(option);
+// 渲染函数
+function renderPolar(metric) {
+  let isCategory = metric === "Stress_Level";
+
+  let angleAxisData = countries;
+  let radiusAxisData = isCategory ? stressLevels : ["段1","段2","段3","段4","段5"];
+
+  let option = {
+    title: {
+      text: `国家与${metric}分布`,
+      left: 'center'
+    },
+    legend: { show: false },
+    polar: {},
+    tooltip: {
+      formatter: function (params) {
+        let country = countries[params.value[1]];
+        let level = isCategory ? stressLevels[params.value[0]] : radiusAxisData[params.value[0]];
+        return `${country}<br/>${metric}: ${level}<br/>值: ${params.value[2]}`;
+      }
+    },
+    angleAxis: {
+      type: 'category',
+      data: angleAxisData,
+      boundaryGap: false,
+      axisLabel: { rotate: 45 }
+    },
+    radiusAxis: {
+      type: 'category',
+      data: radiusAxisData
+    },
+    series: [
+      {
+        name: '健康分布',
+        type: 'scatter',
+        coordinateSystem: 'polar',
+        symbolSize: val => Math.max(5, val[2] / 3),
+        itemStyle: { color: '#42a5f5' },
+        data: generateData(metric)
+      }
+    ]
+  };
+  polarChart.setOption(option);
+}
+
+// 初始加载
+renderPolar("Sleep_Hours");
+
+// 绑定下拉框
+document.getElementById('health-metric').addEventListener('change', e=>{
+  renderPolar(e.target.value);
+});
 </script>
 </body>
 </html>
