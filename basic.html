@@ -4,40 +4,12 @@
   <meta charset="UTF-8">
   <title>受调查组基本情况分析</title>
   <script src="js/echarts.min.js"></script>
-  <style>
-    body {
-      font-family: "Microsoft YaHei", sans-serif;
-      background: #f9f9f9;
-      margin: 20px;
-    }
-    h1 {
-      text-align: center;
-      color: #222;
-    }
-    h2 {
-      text-align: center;
-      margin-top: 40px;
-      color: #333;
-    }
-    .chart-container {
-      display: flex;
-      flex-wrap: wrap;
-      justify-content: center;
-      gap: 20px;
-    }
-    .chart {
-      width: 600px;
-      height: 400px;
-      background: #fff;
-      border-radius: 12px;
-      box-shadow: 0 4px 12px rgba(0,0,0,0.1);
-      padding: 10px;
-    }
-  </style>
+  <link rel="stylesheet" href="css/style.css">
+  <script src="js/echarts.min.js"></script>
 </head>
 <body>
 <header>
-    <h1>☕ 受调查者基本情况</h1>
+    <h1>☕ Global Coffee Health</h1>
     <nav>
         <a href="index.html">首页</a>
          <a href="basic.html">受调查者基本情况</a>
@@ -47,29 +19,20 @@
     </nav>
 </header>
 
-  <!-- 人口特征 -->
-  <h2>1. 人口特征</h2>
-  <div class="chart-container">
-    <div id="ageDist" class="chart"></div>
-    <div id="genderPie" class="chart"></div>
-    <div id="ageGenderBar" class="chart"></div>
-  </div>
+<!-- 三行三列总布局 -->
+<div class="dashboard">
+  <div id="ageDist" class="chart"></div>
+  <div id="genderPie" class="chart"></div>
+  <div id="ageGenderBar" class="chart"></div>
+  <div id="countryBar" class="chart"></div>
+  <div id="occupationBar" class="chart"></div>
+  <div id="countryOccBar" class="chart"></div>
+  <div id="smokingPie" class="chart"></div>
+  <div id="alcoholPie" class="chart"></div>
+  <div id="smokeDrinkBar" class="chart"></div>
+</div>
 
-  <!-- 地域与职业 -->
-  <h2>2. 地域与职业</h2>
-  <div class="chart-container">
-    <div id="countryBar" class="chart"></div>
-    <div id="occupationBar" class="chart"></div>
-    <div id="countryOccBar" class="chart"></div>
-  </div>
-
-  <!-- 生活习惯 -->
-  <h2>3. 基础生活习惯</h2>
-  <div class="chart-container">
-    <div id="smokingPie" class="chart"></div>
-    <div id="alcoholPie" class="chart"></div>
-    <div id="smokeDrinkBar" class="chart"></div>
-  </div>
+  
 
   <script>
     // 加载 JSON 数据
