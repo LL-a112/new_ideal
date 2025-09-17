@@ -76,15 +76,27 @@
 fetch("data/coffee.json")
   .then(res => res.json())
   .then(data => {
-    const countries = ["Australia","Belgium","Brazil","Canada","China","Finland","France","Germany","India","Italy","Japan","Mexico","Netherlands","Norway","South Korea","Spain","Sweden","Switzerland","UK","USA"];
-   
-    const levelMap = { "Low": 1, "Medium": 2, "High": 3 }; // 支持程度映射
-    const colors = ["#ff6f61","#ffb74d","#4db6ac"];
+    const countries = [
+      "Australia","Belgium","Brazil","Canada","China","Finland","France","Germany","India",
+      "Italy","Japan","Mexico","Netherlands","Norway","South Korea","Spain","Sweden","Switzerland","UK","USA"
+    ];
+
+    const levelMap = { "Low": 1, "Medium": 2, "High": 3 };
+    const colors = { "Sleep_Hours": "#ff6f61", "BMI": "#4db6ac", "Stress_Index": "#ffb74d" };
+
+    const countryMap = {
+      "United States": "USA",
+      "Korea, South": "South Korea",
+      "South Korea": "South Korea"
+      // 如有其他别名可继续添加
+    };
 
     const polarChart = echarts.init(document.getElementById('polar'));
 
     function renderChart(factor) {
       const sData = [];
+
+      // 遍历指定国家保证每个国家都有点
       countries.forEach((country, ci) => {
         // 找到该国家所有数据条目
         const items = data.filter(item => {
@@ -126,7 +138,7 @@ fetch("data/coffee.json")
     renderChart(document.getElementById('factorSelect').value);
 
     // 下拉选择切换
-    document.getElementById('factorSelect').addEventListener('change', (e) => {
+    document.getElementById('factorSelect').addEventListener('change', e => {
       renderChart(e.target.value);
     });
   });
