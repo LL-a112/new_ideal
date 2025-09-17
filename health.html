@@ -6,12 +6,7 @@
   <title>Global Coffee Health</title>
   <script src="js/echarts.min.js"></script>
   <style>
-    body {
-      margin: 0;
-      padding: 0;
-      font-family: "Microsoft YaHei", sans-serif;
-      background: #f5f7fa;
-    }
+   
     
     .chart-container {
       width: 95%;
@@ -82,26 +77,32 @@ fetch("data/coffee.json")
   .then(res => res.json())
   .then(data => {
     const countries = ["Australia","Belgium","Brazil","Canada","China","Finland","France","Germany","India","Italy","Japan","Mexico","Netherlands","Norway","South Korea","Spain","Sweden","Switzerland","UK","USA"];
-    const countryMap = {
-     "United States": "USA",
-     "Korea, South": "South Korea"
-      };
+   
     const levelMap = { "Low": 1, "Medium": 2, "High": 3 }; // 支持程度映射
     const colors = ["#ff6f61","#ffb74d","#4db6ac"];
 
     const polarChart = echarts.init(document.getElementById('polar'));
 
    function renderChart(factor) {
-  const sData = [];
-  data.forEach(item => {
-    const countryName = countryMap[item.Country] || item.Country;
-    const ci = countries.indexOf(countryName);
-    if(ci === -1) return;
-    let val = item[factor];
-    if(val === null || val === undefined || val === "") return;
-    if(typeof val !== "number") val = levelMap[val] || 0;
-    sData.push([ci, val]);
-  });
+    const sData = [];
+    countries.forEach((country, ci) => {
+        // 找到该国家所有数据条目
+        const items = data.filter(item => {
+          const cname = countryMap[item.Country] || item.Country;
+          return cname === country;
+        });
+        if(items.length === 0) {
+          sData.push([ci, 0]); // 数据缺失填 0
+        } else {
+          items.forEach(item => {
+            let val = item[factor];
+            if(val === null || val === undefined || val === "") val = 0;
+            if(typeof val !== "number") val = levelMap[val] || 0;
+            sData.push([ci, val]);
+          });
+        }
+      });
+
 
   const maxVal = Math.max(...sData.map(d => d[1])) || 10;
 
