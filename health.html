@@ -12,25 +12,66 @@
       font-family: "Microsoft YaHei", sans-serif;
       background: #f5f7fa;
     }
-   
-    .controls {
-      width: 95%;
-      margin: 20px auto;
-      text-align: center;
+    header {
+      background: #fff;
+      padding: 15px 30px;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+    header h1 {
+      margin: 0;
+      font-size: 24px;
+    }
+    header nav a {
+      margin-left: 20px;
+      text-decoration: none;
+      color: #333;
+      font-weight: 500;
+    }
+    header nav a:hover {
+      color: #00838f;
     }
     .chart-container {
       width: 95%;
       height: 800px;
-      margin: 20px auto 40px auto;
+      margin: 40px auto;
       background: #fff;
       padding: 20px;
       box-shadow: 0 2px 12px rgba(0,0,0,0.1);
       border-radius: 8px;
     }
-    select {
+    .select-container {
+      text-align: center;
+      margin: 20px 0;
+    }
+    .custom-select {
+      appearance: none;
+      -webkit-appearance: none;
+      -moz-appearance: none;
+      background-color: #fff;
+      border: 1px solid #ccc;
+      border-radius: 8px;
+      padding: 8px 12px;
       font-size: 16px;
-      padding: 5px 10px;
-      min-width: 200px;
+      font-family: "Microsoft YaHei", sans-serif;
+      color: #333;
+      cursor: pointer;
+      width: 220px;
+      transition: all 0.3s ease;
+      background-image: url('data:image/svg+xml;utf8,<svg fill="%23333" height="10" viewBox="0 0 10 10" width="10" xmlns="http://www.w3.org/2000/svg"><polygon points="0,0 10,0 5,5"/></svg>');
+      background-repeat: no-repeat;
+      background-position: right 10px center;
+      background-size: 10px;
+    }
+    .custom-select:hover {
+      border-color: #00838f;
+    }
+    .custom-select:focus {
+      outline: none;
+      border-color: #00838f;
+      box-shadow: 0 0 5px rgba(0,131,143,0.5);
     }
   </style>
 </head>
@@ -46,12 +87,11 @@
   </nav>
 </header>
 
-<div class="controls">
-  <label for="factorSelect">选择指标：</label>
-  <select id="factorSelect" multiple>
-    <option value="Sleep_Hours" selected>Sleep Hours</option>
-    <option value="BMI" selected>BMI</option>
-    <option value="Stress_Index" selected>Stress Index</option>
+<div class="select-container">
+  <select id="factorSelect" class="custom-select">
+    <option value="Sleep_Hours">Sleep Hours</option>
+    <option value="BMI">BMI</option>
+    <option value="Stress_Index">Stress Index</option>
   </select>
 </div>
 
@@ -61,58 +101,30 @@
 fetch("data/coffee.json")
   .then(res => res.json())
   .then(data => {
-    // 指定国家
-    const countries = ["Australia","Belgium","Brazil","Canada","China","Finland","France","Germany",
-      "India","Italy","Japan","Mexico","Netherlands","Norway","South Korea","Spain","Sweden",
-      "Switzerland","UK","USA"];
-
+    const countries = ["Australia","Belgium","Brazil","Canada","China","Finland","France","Germany","India","Italy","Japan","Mexico","Netherlands","Norway","South Korea","Spain","Sweden","Switzerland","UK","USA"];
     const levelMap = { "Low": 1, "Medium": 2, "High": 3 }; // 支持程度映射
-    const colors = ["#ff6f61","#4db6ac","#7986cb","#ffb74d","#f06292","#ba68c8","#aed581"];
+    const colors = ["#ff6f61","#ffb74d","#4db6ac"];
 
     const polarChart = echarts.init(document.getElementById('polar'));
 
-    function renderPolar(selectedFactors) {
-      const series = selectedFactors.map((factor, fi) => {
-        const sData = [];
-        data.forEach(item => {
-          const ci = countries.indexOf(item.Country);
-          if(ci === -1) return;
-          let val = item[factor];
-          if(typeof val !== "number") val = levelMap[val] || 0;
-          sData.push([ci, val]);
-        });
-        return {
-          name: factor,
-          type: 'scatter',
-          coordinateSystem: 'polar',
-          data: sData,
-          symbolSize: 5,
-          itemStyle: { color: colors[fi % colors.length] }
-        };
+    function renderChart(factor) {
+      const sData = [];
+      data.forEach(item => {
+        const ci = countries.indexOf(item.Country);
+        if(ci === -1) return;
+        let val = item[factor];
+        if(typeof val !== "number") val = levelMap[val] || 0;
+        sData.push([ci, val]);
       });
-
-      // 计算最大值
-      let maxVal = 0;
-      series.forEach(s => {
-        s.data.forEach(d => { if(d[1]>maxVal) maxVal=d[1]; });
-      });
-      maxVal *= 1.2;
 
       const option = {
         title: {
-          text: '关键健康指标极坐标分布',
+          text: factor + ' 极坐标分布',
           left: 'center',
           top: 10
         },
         tooltip: {
-          formatter: (params) => {
-            return `${countries[params.value[0]]} - ${params.seriesName}<br/>数值: ${params.value[1]}`;
-          }
-        },
-        legend: {
-          data: selectedFactors,
-          top: 40,
-          left: 'center'
+          formatter: (params) => `${countries[params.value[0]]} - ${factor}<br/>数值: ${params.value[1]}`
         },
         polar: {},
         angleAxis: {
@@ -122,23 +134,26 @@ fetch("data/coffee.json")
         },
         radiusAxis: {
           type: 'value',
-          min: 0,
-          max: maxVal
+          min: 0
         },
-        series: series
+        series: [{
+          name: factor,
+          type: 'scatter',
+          coordinateSystem: 'polar',
+          data: sData,
+          symbolSize: 8,
+          itemStyle: { color: colors[0] }
+        }]
       };
-
       polarChart.setOption(option);
     }
 
-    // 初始显示所有指标
-    renderPolar(["Sleep_Hours","BMI","Stress_Index"]);
+    // 初始渲染
+    renderChart(document.getElementById('factorSelect').value);
 
-    // 下拉菜单交互
-    const factorSelect = document.getElementById('factorSelect');
-    factorSelect.addEventListener('change', () => {
-      const selected = Array.from(factorSelect.selectedOptions).map(o=>o.value);
-      renderPolar(selected);
+    // 下拉选择切换
+    document.getElementById('factorSelect').addEventListener('change', (e) => {
+      renderChart(e.target.value);
     });
   });
 </script>
