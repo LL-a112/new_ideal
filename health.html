@@ -2,8 +2,10 @@
 <html lang="zh">
 <head>
   <meta charset="UTF-8">
+  <link rel="stylesheet" href="css/style.css">
   <title>健康指标可视化</title>
   <script src="js/echarts.min.js"></script>
+  
   <style>
     body {
       margin: 0;
@@ -37,7 +39,7 @@
         const factors = [...new Set(data.map(d => d.Factor))];
 
         // 将文字型程度转化为数值映射
-        const levelMap = { "Low": 1, "Medium": 2, "High": 3, "低": 1, "中": 2, "高": 3 };
+        const levelMap = { "Low": 1, "Medium": 2, "High": 3 };
         const matrix = factors.map(f => {
           return countries.map(c => {
             const item = data.find(d => d.Country === c && d.Factor === f);
