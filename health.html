@@ -50,6 +50,7 @@
     select {
       font-size: 16px;
       padding: 5px 10px;
+      min-width: 200px;
     }
   </style>
 </head>
@@ -67,10 +68,10 @@
 
 <div class="controls">
   <label for="factorSelect">选择指标：</label>
-  <select id="factorSelect">
-    <option value="Sleep_Hours">Sleep Hours</option>
-    <option value="BMI">BMI</option>
-    <option value="Stress_Index">Stress Index</option>
+  <select id="factorSelect" multiple>
+    <option value="Sleep_Hours" selected>Sleep Hours</option>
+    <option value="BMI" selected>BMI</option>
+    <option value="Stress_Index" selected>Stress Index</option>
   </select>
 </div>
 
@@ -80,36 +81,58 @@
 fetch("data/coffee.json")
   .then(res => res.json())
   .then(data => {
-    const countries = [...new Set(data.map(d => d.Country))];
-    const levelMap = { "Low": 1, "Medium": 2, "High": 3 }; // 文字程度映射
-    const colors = ["#ff6f61","#4db6ac","#7986cb"];
+    // 指定国家
+    const countries = ["Australia","Belgium","Brazil","Canada","China","Finland","France","Germany",
+      "India","Italy","Japan","Mexico","Netherlands","Norway","South Korea","Spain","Sweden",
+      "Switzerland","UK","USA"];
+
+    const levelMap = { "Low": 1, "Medium": 2, "High": 3 }; // 支持程度映射
+    const colors = ["#ff6f61","#4db6ac","#7986cb","#ffb74d","#f06292","#ba68c8","#aed581"];
 
     const polarChart = echarts.init(document.getElementById('polar'));
 
-    function renderPolar(factor) {
-      // 构造极坐标数据
-      const seriesData = [];
-      data.forEach(item => {
-        const ci = countries.indexOf(item.Country);
-        if(ci === -1) return;
-        let val = item[factor];
-        if(typeof val !== "number") val = levelMap[val] || 0;
-        seriesData.push([ci, val]);
+    function renderPolar(selectedFactors) {
+      const series = selectedFactors.map((factor, fi) => {
+        const sData = [];
+        data.forEach(item => {
+          const ci = countries.indexOf(item.Country);
+          if(ci === -1) return;
+          let val = item[factor];
+          if(typeof val !== "number") val = levelMap[val] || 0;
+          sData.push([ci, val]);
+        });
+        return {
+          name: factor,
+          type: 'scatter',
+          coordinateSystem: 'polar',
+          data: sData,
+          symbolSize: val => val[1]*2 + 5,
+          itemStyle: { color: colors[fi % colors.length] }
+        };
       });
 
-      // 自动计算最大值，让图表自适应
-      const maxVal = Math.max(...seriesData.map(d=>d[1])) * 1.2;
+      // 计算最大值
+      let maxVal = 0;
+      series.forEach(s => {
+        s.data.forEach(d => { if(d[1]>maxVal) maxVal=d[1]; });
+      });
+      maxVal *= 1.2;
 
       const option = {
         title: {
-          text: factor + ' 极坐标分布',
+          text: '关键健康指标极坐标分布',
           left: 'center',
           top: 10
         },
         tooltip: {
           formatter: (params) => {
-            return `${countries[params.value[0]]} - ${factor}<br/>数值: ${params.value[1]}`;
+            return `${countries[params.value[0]]} - ${params.seriesName}<br/>数值: ${params.value[1]}`;
           }
+        },
+        legend: {
+          data: selectedFactors,
+          top: 40,
+          left: 'center'
         },
         polar: {},
         angleAxis: {
@@ -122,25 +145,20 @@ fetch("data/coffee.json")
           min: 0,
           max: maxVal
         },
-        series: [{
-          name: factor,
-          type: 'scatter',
-          coordinateSystem: 'polar',
-          data: seriesData,
-          symbolSize: val => val[1]*2 + 5,
-          itemStyle: { color: colors[0] }
-        }]
+        series: series
       };
 
       polarChart.setOption(option);
     }
 
-    // 初始化显示第一个指标
-    renderPolar("Sleep_Hours");
+    // 初始显示所有指标
+    renderPolar(["Sleep_Hours","BMI","Stress_Index"]);
 
     // 下拉菜单交互
-    document.getElementById('factorSelect').addEventListener('change', (e) => {
-      renderPolar(e.target.value);
+    const factorSelect = document.getElementById('factorSelect');
+    factorSelect.addEventListener('change', () => {
+      const selected = Array.from(factorSelect.selectedOptions).map(o=>o.value);
+      renderPolar(selected);
     });
   });
 </script>
