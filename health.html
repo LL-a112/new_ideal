@@ -83,9 +83,9 @@ fetch("data/coffee.json")
 
     const polarChart = echarts.init(document.getElementById('polar'));
 
-   function renderChart(factor) {
-    const sData = [];
-    countries.forEach((country, ci) => {
+    function renderChart(factor) {
+      const sData = [];
+      countries.forEach((country, ci) => {
         // 找到该国家所有数据条目
         const items = data.filter(item => {
           const cname = countryMap[item.Country] || item.Country;
@@ -103,25 +103,25 @@ fetch("data/coffee.json")
         }
       });
 
+      const maxVal = Math.max(...sData.map(d => d[1])) || 10;
 
-  const maxVal = Math.max(...sData.map(d => d[1])) || 10;
+      polarChart.setOption({
+        title: { text: factor + " 极坐标分布", left: 'center', top: 10 },
+        tooltip: { formatter: (params) => `${countries[params.value[0]]} - ${factor}<br/>数值: ${params.value[1]}` },
+        polar: {},
+        angleAxis: { type: 'category', data: countries, axisLabel: { rotate: 45 } },
+        radiusAxis: { type: 'value', min: 0, max: maxVal + 2 },
+        series: [{
+          name: factor,
+          type: 'scatter',
+          coordinateSystem: 'polar',
+          data: sData,
+          symbolSize: 12,
+          itemStyle: { color: colors[factor] }
+        }]
+      });
+    }
 
-  polarChart.setOption({
-    title: { text: factor + " 极坐标分布", left: 'center', top: 10 },
-    tooltip: { formatter: (params) => `${countries[params.value[0]]} - ${factor}<br/>数值: ${params.value[1]}` },
-    polar: {},
-    angleAxis: { type: 'category', data: countries, axisLabel: { rotate: 45 } },
-    radiusAxis: { type: 'value', min: 0, max: maxVal + 2 },
-    series: [{
-      name: factor,
-      type: 'scatter',
-      coordinateSystem: 'polar',
-      data: sData,
-      symbolSize: 12,
-      itemStyle: { color: colors[factor] }
-    }]
-  });
-}
     // 初始渲染
     renderChart(document.getElementById('factorSelect').value);
 
