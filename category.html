@@ -42,7 +42,7 @@ let barChart = echarts.init(document.getElementById('bar-chart'));
 let coffeeData = [];
 
 // 定义图片纹理
-const spirit = 'image://./coffee.png';  // 这里用你提供的完整base64
+const spirit = 'image://coffee.png';  // 这里用你提供的完整base64
 
 fetch('data/coffee.json')
 .then(res=>res.json())
@@ -67,28 +67,29 @@ function renderBar(habit){
         groups[key].push(d.Coffee_Intake);
     });
 
-    let xData = Object.keys(groups);
-    let yData = xData.map(k=>{
+    let yData = Object.keys(groups);
+    let xData = yData.map(k=>{
         let vals = groups[k];
-        let avg = vals.reduce((a,b)=>a+b,0)/vals.length;
         return Number((vals.reduce((a,b)=>a+b,0)/vals.length).toFixed(2));
     });
 
-    barChart.setOption({
-        tooltip:{trigger:'axis'},
-        xAxis:{type:'category', data:xData},
-        yAxis:{type:'value', name:'平均咖啡摄入量'},
-        series:[{
-            type:'bar',
-            data:yData,
-            itemStyle: {
-                color: {
-                    image: spirit,   // 使用图片纹理
-                    repeat: 'repeat' // 平铺方式，可选 'repeat-x'、'repeat-y'、'no-repeat'
-                }
+   barChart.setOption({
+    tooltip: { trigger: 'axis', axisPointer: { type: 'shadow' } },
+    xAxis: { type: 'value', name: '平均咖啡摄入量' },   // 横轴咖啡量
+    yAxis: { type: 'category', data: xData, name: habit }, // 纵轴类别
+    series: [{
+        type: 'bar',
+        data: yData,
+        itemStyle: {
+            color: {
+                image: spirit,
+                repeat: 'repeat'
             }
-        }]
-    });
+        },
+        barCategoryGap: '40%' // 柱子间距
+    }]
+});
+
 }
 </script>
 
