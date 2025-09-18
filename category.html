@@ -5,7 +5,12 @@
 <title>分类分析</title>
 <link rel="stylesheet" href="css/style.css">
 <script src="js/echarts.min.js"></script>
-
+<style>
+.chart-container {
+  width: 800px;  /* 或 100% */
+  height: 600px;
+  margin: auto;
+}
 </head>
 <body>
 <header>
@@ -50,7 +55,6 @@ document.getElementById('habit-select').addEventListener('change', e=>{
 });
 
 function renderBar(habit){
-    // 按习惯和性别分组平均咖啡摄入
     let groups = {};
     coffeeData.forEach(d=>{
         let key = habit=='Physical_Activity_Hours' ? 
@@ -61,30 +65,27 @@ function renderBar(habit){
         groups[key].push(d.Coffee_Intake);
     });
 
-    let yData = Object.keys(groups);
+    let yData = Object.keys(groups);  // 类别
     let xData = yData.map(k=>{
         let vals = groups[k];
-        return Number((vals.reduce((a,b)=>a+b,0)/vals.length).toFixed(2));
+        return Number((vals.reduce((a,b)=>a+b,0)/vals.length).toFixed(2)); // 数值
     });
 
-   barChart.setOption({
-    tooltip: { trigger: 'axis', axisPointer: { type: 'shadow' } },
-    xAxis: { type: 'value', name: '平均咖啡摄入量' },   // 横轴咖啡量
-    yAxis: { type: 'category', data: xData, name: habit }, // 纵轴类别
-    series: [{
-        type: 'bar',
-        data: yData,
-        itemStyle: {
-            color: {
-                image: spirit,
-                repeat: 'repeat'
-            }
-        },
-        barCategoryGap: '40%' // 柱子间距
-    }]
-});
-
+    barChart.setOption({
+        tooltip: { trigger: 'axis', axisPointer: { type: 'shadow' } },
+        xAxis: { type: 'value', name: '平均咖啡摄入量' },
+        yAxis: { type: 'category', data: yData, name: habit },
+        series: [{
+            type: 'bar',
+            data: xData,
+            itemStyle: {
+                color: { image: spirit, repeat: 'repeat' }
+            },
+            barCategoryGap: '40%'
+        }]
+    });
 }
+
 </script>
 
 </body>
