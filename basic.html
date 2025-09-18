@@ -97,9 +97,7 @@ fetch("data/coffee.json")
           {name:"Male", value:genderCount.Male},
           {name:"Female", value:genderCount.Female}
         ],
-        itemStyle: {
-      color: '#1e56a0'  // 蓝色
-    }
+        color: ['#1e56a0', '#d6e4f0']  // 男：深蓝，女：浅蓝
       }]
     });
 
@@ -118,7 +116,11 @@ fetch("data/coffee.json")
       xAxis:{type:'category', data:Object.keys(occCount)},
       yAxis:{type:'value'},
       dataZoom:[{type:"slider", show:true}],
-      series:[{type:'bar', data:Object.values(occCount)}]
+      series:[{type:'bar', data:Object.values(occCount),
+              itemStyle: {
+      color: '#1e56a0'  // 蓝色
+              }
+              }]
     });
   });
 </script>
