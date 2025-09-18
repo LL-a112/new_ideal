@@ -34,6 +34,9 @@
 let barChart = echarts.init(document.getElementById('bar-chart'));
 let coffeeData = [];
 
+// 定义图片纹理
+const spirit = 'image://coffee.png';  // 这里用你提供的完整base64
+
 fetch('data/coffee.json')
 .then(res=>res.json())
 .then(data=>{
@@ -68,13 +71,19 @@ function renderBar(habit){
         tooltip:{trigger:'axis'},
         xAxis:{type:'category', data:xData},
         yAxis:{type:'value', name:'平均咖啡摄入量'},
-        series:[{type:'bar', data:yData,
-                itemStyle: {
-      color: '#1e56a0'  // 蓝色
-    }
-                }]
+        series:[{
+            type:'bar',
+            data:yData,
+            itemStyle: {
+                color: {
+                    image: spirit,   // 使用图片纹理
+                    repeat: 'repeat' // 平铺方式，可选 'repeat-x'、'repeat-y'、'no-repeat'
+                }
+            }
+        }]
     });
 }
 </script>
+
 </body>
 </html>
