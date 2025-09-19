@@ -136,20 +136,20 @@ function renderBar(habit){
     });
 
     barChart.setOption({
-        tooltip: { trigger: 'axis', axisPointer: { type: 'shadow' } },
-        xAxis: { type: 'value', name: '平均咖啡摄入量' },
-        yAxis: { type: 'category', data: yData, name: habitNameMap[habit] },
-        series: [{
-            type: 'pictorialBar',
-            symbol: spirit,
-            symbolSize: [30, 30],
-            symbolRepeat: true,
-            symbolMargin: 2,
-            data: xData
-        }]
-    });
+    tooltip: { trigger: 'axis', axisPointer: { type: 'shadow' } },
+    xAxis: { type: 'value', name: '平均咖啡摄入量' },
+    yAxis: { type: 'category', data: yData, name: habitNameMap[habit] },
+    series: [{
+        type: 'pictorialBar',
+        symbol: spirit,
+        symbolRepeat: true,
+        symbolMargin: 2,
+        symbolSize: [30, 30], // 或使用动态高度
+        data: xData.map(val => ({ value: val, symbolSize: [30, val * 30 / Math.max(...xData)] }))
+    }]
+});
 }
-}
+
 
 
 </script>
