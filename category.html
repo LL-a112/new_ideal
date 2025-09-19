@@ -77,12 +77,12 @@ function renderBar(habit){
         xAxis: { type: 'value', name: '平均咖啡摄入量' },
         yAxis: { type: 'category', data: yData, name: habit },
         series: [{
-            type: 'bar',
-            data: xData,
-            itemStyle: {
-                color: { image: spirit, repeat: 'repeat' }
-            },
-            barCategoryGap: '40%'
+            type: 'pictorialBar',
+            symbol: spirit,       // 使用咖啡图案
+            symbolSize: [20, 20], // 控制单个咖啡图案大小
+            symbolRepeat: true,   // 重复填充
+            symbolMargin: 2,      // 图案之间的间距
+            data: xData
         }]
     });
 }
