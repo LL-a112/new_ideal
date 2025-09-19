@@ -5,6 +5,22 @@
 <title>Global Coffee Health 仪表盘</title>
 <link rel="stylesheet" href="css/style.css">
 <script src="js/echarts.min.js"></script>
+<style>
+.container {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 20px;
+  padding: 20px;
+}
+.card {
+  background: #fff;
+  border-radius: 12px;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+  padding: 15px;
+  text-align: center;
+}
+.card h3 { margin-bottom: 10px; }
+</style>
 </head>
 <body>
 
@@ -12,7 +28,7 @@
     <h1>☕ Global Coffee Health</h1>
     <nav>
         <a href="index.html">首页</a>
-         <a href="basic.html">受调查者基本情况</a>
+        <a href="basic.html">受调查者基本情况</a>
         <a href="health.html">健康分析</a>
         <a href="map.html">全球地图</a>
         <a href="category.html">分类分析</a>
@@ -26,73 +42,62 @@
     </div>
     <div class="card">
         <h3>平均睡眠时长</h3>
-        <p id="kpi-sleep">0</p>
+        <div id="sleepChart" style="height:200px;"></div>
     </div>
     <div class="card">
         <h3>平均压力指数</h3>
-        <p id="kpi-stress">0</p>
+        <div id="stressChart" style="height:200px;"></div>
     </div>
     <div class="card">
         <h3>平均 BMI</h3>
-        <p id="kpi-bmi">0</p>
+        <div id="bmiChart" style="height:200px;"></div>
     </div>
 </div>
 
-<div id="coffeeChart" style="width:100%;height:500px;"></div>
-
 <script>
-var coffeeChart = echarts.init(document.getElementById('coffeeChart'));
+fetch('data/coffee.json')
+.then(res => res.json())
+.then(data => {
+    // 计算四个指标平均值
+    const coffeeAvg = Math.round(data.reduce((a,b)=>a+b.Coffee_Intake,0)/data.length);
+    const sleepAvg = Math.round(data.reduce((a,b)=>a+b.Sleep_Hours,0)/data.length);
+    const stressMapping = {'Low':1,'Medium':2,'High':3};
+    const stressAvg = Math.round(data.reduce((a,b)=>a+stressMapping[b.Stress_Level],0)/data.length);
+    const bmiAvg = Math.round(data.reduce((a,b)=>a+b.BMI,0)/data.length);
 
-// 配置项
-var option = {
-    title: {
-        text: '咖啡摄入变化动画',
-        left: 'center',
-        textStyle: { fontSize: 20 }
-    },
-    xAxis: {
-        type: 'value',
-        min: 0,
-        max: 100,
-        show: false
-    },
-    yAxis: {
-        type: 'category',
-        data: ['Coffee'],
-        show: false
-    },
-    grid: {
-        top: 'center',
-        height: 200
-    },
-    series: [
-        {
-            type: 'pictorialBar',
-            symbol: 'image://coffee.png', // 本地图片
-            symbolSize: [40, 40],
-            symbolRepeat: true,
-            symbolMargin: 2,
-            data: [0]
-        }
-    ]
-};
+    // 初始化图表函数
+    function createAnimChart(id, value, symbol='image://coffee.png', maxVal=50){
+        let chart = echarts.init(document.getElementById(id));
+        chart.setOption({
+            xAxis: { type:'value', min:0, max:maxVal, show:false },
+            yAxis: { type:'category', data:[''], show:false },
+            series:[{
+                type:'pictorialBar',
+                symbol: symbol,
+                symbolSize:[40,40],
+                symbolRepeat:true,
+                symbolMargin:1,
+                data:[0]
+            }],
+            grid: { top:'center', height: 100 }
+        });
+        let v = 0;
+        const interval = Math.max(20, 500/value); // 调整速度
+        const timer = setInterval(()=>{
+            v++;
+            if(v>value) clearInterval(timer);
+            chart.setOption({ series:[{ data:[v] }] });
+        }, interval);
+    }
 
-coffeeChart.setOption(option);
+    // 创建四个动态图表
+    createAnimChart('coffeeChart', coffeeAvg, 'image://coffee.png', coffeeAvg+10);
+    createAnimChart('sleepChart', sleepAvg, 'rect', sleepAvg+10);
+    createAnimChart('stressChart', stressAvg, 'circle', stressAvg+3);
+    createAnimChart('bmiChart', bmiAvg, 'triangle', bmiAvg+10);
 
-// 动态增加咖啡杯数量
-let value = 0;
-let maxValue = 50; // 最大数量（杯数）
-setInterval(() => {
-    value++;
-    if (value > maxValue) value = 0;
-    coffeeChart.setOption({
-        series: [{
-            data: [value]
-        }]
-    });
-}, 500);
+});
 </script>
-
 
 </body>
 </html>
