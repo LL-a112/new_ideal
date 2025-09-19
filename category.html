@@ -99,35 +99,43 @@ document.getElementById('habit-select').addEventListener('change', e=>{
 
 function renderBar(habit){
     let groups = {};
-    coffeeData.forEach(d=>{
-        let key = habit=='Physical_Activity_Hours' ? 
-            (d.Physical_Activity_Hours<=2?'0-2h':d.Physical_Activity_Hours<=4?'2-4h':d.Physical_Activity_Hours<=6?'4-6h':'6h+') 
-            + ` (${d.Gender})`
-            : d[habit] + ` (${d.Gender})`;
+
+    coffeeData.forEach(d => {
+        let key;
+        if(habit === 'Physical_Activity_Hours'){
+            key = d.Physical_Activity_Hours <= 2 ? '0-2h' :
+                  d.Physical_Activity_Hours <= 4 ? '2-4h' :
+                  d.Physical_Activity_Hours <= 6 ? '4-6h' : '6h+';
+        } else {
+            key = d[habit];  // 吸烟/饮酒直接用Yes/No
+        }
+
         if(!groups[key]) groups[key] = [];
         groups[key].push(d.Coffee_Intake);
     });
 
-    let yData = Object.keys(groups);  // 类别
-    let xData = yData.map(k=>{
+    // 类别与对应平均咖啡摄入
+    let xData = Object.keys(groups);
+    let yData = xData.map(k => {
         let vals = groups[k];
-        return Number((vals.reduce((a,b)=>a+b,0)/vals.length).toFixed(2)); // 数值
+        return Number((vals.reduce((a,b)=>a+b,0)/vals.length).toFixed(2));
     });
 
     barChart.setOption({
         tooltip: { trigger: 'axis', axisPointer: { type: 'shadow' } },
         xAxis: { type: 'value', name: '平均咖啡摄入量' },
-        yAxis: { type: 'category', data: yData, name: habit },
+        yAxis: { type: 'category', data: xData, name: habit },
         series: [{
             type: 'pictorialBar',
-            symbol: spirit,       // 使用咖啡图案
-            symbolSize: [30, 30], // 控制单个咖啡图案大小
-            symbolRepeat: true,   // 重复填充
-            symbolMargin: 2,      // 图案之间的间距
-            data: xData
+            symbol: spirit,
+            symbolSize: [30, 30],  // 控制咖啡图案大小
+            symbolRepeat: true,
+            symbolMargin: 2,
+            data: yData
         }]
     });
 }
+
 
 </script>
 
