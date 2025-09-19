@@ -135,23 +135,30 @@ function renderBar(habit){
         return Number((vals.reduce((a,b)=>a+b,0)/vals.length).toFixed(2));
     });
 
-    barChart.setOption({
+   // 计算动态比例
+  let maxVal = Math.max(...xData);
+  let baseSize = 30; // 图标宽度
+  let scaleFactor = 40 / maxVal; // 高度放大比例
+  let minHeight = 10; // 最小高度
+
+  barChart.setOption({
     tooltip: { trigger: 'axis', axisPointer: { type: 'shadow' } },
     xAxis: { type: 'value', name: '平均咖啡摄入量' },
     yAxis: { type: 'category', data: yData, name: habitNameMap[habit] },
     series: [{
-        type: 'pictorialBar',
-        symbol: spirit,
-        symbolRepeat: true,
-        
-        symbolSize: [30, 30], // 或使用动态高度
-        data: xData.map(val => ({ value: val, symbolSize: [30, val * 30 / Math.max(...xData)] }))
+      type: 'pictorialBar',
+      symbol: spirit,
+      symbolRepeat: true,
+      symbolMargin: 1,
+      label: { show: true, position: 'right', formatter: '{c}' },
+      data: xData.map(val => {
+        let height = val * scaleFactor;
+        if(height < minHeight) height = minHeight;
+        return { value: val, symbolSize: [baseSize, height] };
+      })
     }]
-});
+  });
 }
-
-
-
 </script>
 
 </body>
