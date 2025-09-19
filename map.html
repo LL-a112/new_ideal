@@ -38,7 +38,7 @@ Promise.all([
     const countryMap = {};
     coffeeData.forEach(d => {
         if(!countryMap[d.Country]) countryMap[d.Country] = {sum:0,count:0};
-        countryMap[d.Country].sum += d.Caffeine_mg;
+        countryMap[d.Country].sum += d.Coffee_Intake;
         countryMap[d.Country].count += 1;
     });
 
