@@ -48,23 +48,19 @@
         <h3>平均压力指数</h3>
         <div id="stressChart" style="height:200px;"></div>
     </div>
-    <div class="card">
-        <h3>平均 BMI</h3>
-        <div id="bmiChart" style="height:200px;"></div>
-    </div>
+    
 </div>
 
 <script>
 fetch('data/coffee.json')
 .then(res => res.json())
 .then(data => {
-    // 计算四个指标平均值
+    // 计算指标平均值
     const coffeeAvg = Math.round(data.reduce((a,b)=>a+b.Coffee_Intake,0)/data.length);
     const sleepAvg = Math.round(data.reduce((a,b)=>a+b.Sleep_Hours,0)/data.length);
     const stressMapping = {'Low':1,'Medium':2,'High':3};
     const stressAvg = Math.round(data.reduce((a,b)=>a+stressMapping[b.Stress_Level],0)/data.length);
-    const bmiAvg = Math.round(data.reduce((a,b)=>a+b.BMI,0)/data.length);
-
+   
     // 初始化图表函数
     function createAnimChart(id, value, symbol='image://coffee.png', maxVal=50){
         let chart = echarts.init(document.getElementById(id));
@@ -73,10 +69,15 @@ fetch('data/coffee.json')
             yAxis: { type:'category', data:[''], show:false },
             series:[{
                 type:'pictorialBar',
-                symbol: symbol,
+                symbol: 'image://' + symbolPath,
                 symbolSize:[40,40],
                 symbolRepeat:true,
                 symbolMargin:1,
+                label: {
+                    show: true,
+                    position: 'top',
+                    formatter: '{c}'
+                },
                 data:[0]
             }],
             grid: { top:'center', height: 100 }
@@ -92,10 +93,9 @@ fetch('data/coffee.json')
 
     // 创建四个动态图表
     createAnimChart('coffeeChart', coffeeAvg, 'image://coffee.png', coffeeAvg+10);
-    createAnimChart('sleepChart', sleepAvg, 'rect', sleepAvg+10);
-    createAnimChart('stressChart', stressAvg, 'circle', stressAvg+3);
-    createAnimChart('bmiChart', bmiAvg, 'triangle', bmiAvg+10);
-
+    createAnimChart('sleepChart', sleepAvg, 'image://sleep.png', sleepAvg+10);
+    createAnimChart('stressChart', stressAvg, 'image://stress.png', stressAvg+3);
+    
 });
 </script>
 
