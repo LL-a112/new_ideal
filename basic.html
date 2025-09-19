@@ -80,6 +80,7 @@ fetch("data/coffee.json")
     // 绘制图表
     echarts.init(document.getElementById('ageDist')).setOption({
       title: {text:"年龄分布", left:"center"},
+      tooltip: { trigger: 'axis', formatter: '{b}: {c} 人' },
       xAxis: {type:'category', data: ageDist.map(d=>d.name)},
       yAxis: {type:'value'},
       series: [{data: ageDist.map(d=>d.value), type:'bar',itemStyle: {
@@ -90,6 +91,7 @@ fetch("data/coffee.json")
 
     echarts.init(document.getElementById('genderPie')).setOption({
       title: {text:"性别比例", left:"center"},
+      tooltip: { trigger: 'item', formatter: '{b}: {c} ({d}%)' },
       series: [{
         type:'pie',
         radius:'60%',
@@ -103,6 +105,7 @@ fetch("data/coffee.json")
 
     echarts.init(document.getElementById('countryBar')).setOption({
       title:{text:"国家分布", left:"center"},
+      tooltip: { trigger: 'axis', formatter: '{b}: {c} 人' },
       xAxis:{type:'category', data:Object.keys(countryCount)},
       yAxis:{type:'value'},
       dataZoom:[{type:"slider", show:true}],
@@ -113,6 +116,7 @@ fetch("data/coffee.json")
 
     echarts.init(document.getElementById('occupationBar')).setOption({
       title:{text:"职业分布", left:"center"},
+      tooltip: { trigger: 'axis', formatter: '{b}: {c} 人' },
       xAxis:{type:'category', data:Object.keys(occCount)},
       yAxis:{type:'value'},
       dataZoom:[{type:"slider", show:true}],
