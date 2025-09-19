@@ -48,54 +48,51 @@
         <h3>平均压力指数</h3>
         <div id="stressChart" style="height:200px;"></div>
     </div>
-    
 </div>
 
 <script>
 fetch('data/coffee.json')
 .then(res => res.json())
 .then(data => {
-    // 计算指标平均值
+    // 平均值计算
     const coffeeAvg = Math.round(data.reduce((a,b)=>a+b.Coffee_Intake,0)/data.length);
     const sleepAvg = Math.round(data.reduce((a,b)=>a+b.Sleep_Hours,0)/data.length);
     const stressMapping = {'Low':1,'Medium':2,'High':3};
     const stressAvg = Math.round(data.reduce((a,b)=>a+stressMapping[b.Stress_Level],0)/data.length);
-   
-    // 初始化图表函数
-    function createAnimChart(id, value, symbol='image://coffee.png', maxVal=50){
+
+    // 创建动画图表函数
+    function createAnimChart(id, value, symbolPath, maxVal){
         let chart = echarts.init(document.getElementById(id));
         chart.setOption({
+            tooltip: { show: true, formatter: '{c}' },
             xAxis: { type:'value', min:0, max:maxVal, show:false },
             yAxis: { type:'category', data:[''], show:false },
             series:[{
                 type:'pictorialBar',
-                symbol: symbol, 
+                symbol: 'image://' + symbolPath,
                 symbolSize:[40,40],
                 symbolRepeat:true,
                 symbolMargin:1,
-                label: {
-                    show: true,
-                    position: 'top',
-                    formatter: '{c}'
-                },
+                label: { show:true, position:'top', formatter:'{c}' },
                 data:[0]
             }],
             grid: { top:'center', height: 100 }
         });
-        let v = 0;
-        const interval = Math.max(20, 500/value); // 调整速度
-        const timer = setInterval(()=>{
-            v++;
-            if(v>value) clearInterval(timer);
-            chart.setOption({ series:[{ data:[v] }] });
-        }, interval);
+
+        let current = 0;
+        function animate(){
+            current += 0.5; // 每帧增加，可调
+            if(current > value) current = value;
+            chart.setOption({ series:[{ data:[current] }] });
+            if(current < value) requestAnimationFrame(animate);
+        }
+        animate();
     }
 
-    // 创建四个动态图表
-    createAnimChart('coffeeChart', coffeeAvg, 'image://coffee.png', coffeeAvg+10);
-    createAnimChart('sleepChart', sleepAvg, 'image://sleep.png', sleepAvg+10);
-    createAnimChart('stressChart', stressAvg, 'image://stress.png', stressAvg+3);
-    
+    // 创建三个动画图表
+    createAnimChart('coffeeChart', coffeeAvg, 'coffee.png', coffeeAvg+10);
+    createAnimChart('sleepChart', sleepAvg, 'sleep.png', sleepAvg+10);
+    createAnimChart('stressChart', stressAvg, 'stress.png', stressAvg+3);
 });
 </script>
 
