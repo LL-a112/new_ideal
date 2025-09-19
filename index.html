@@ -22,7 +22,7 @@
 <div class="container">
     <div class="card">
         <h3>平均咖啡摄入量</h3>
-        <p id="kpi-coffee">0</p>
+        <div id="coffeeChart" style="height:200px;"></div>
     </div>
     <div class="card">
         <h3>平均睡眠时长</h3>
@@ -39,19 +39,51 @@
 </div>
 
 <script>
+// 咖啡杯图片（本地 coffee.png）
+const coffeeURI = 'image://coffee.png';
+
+// 初始化图表
+let coffeeChart = echarts.init(document.getElementById('coffeeChart'));
+
 fetch('data/coffee.json')
 .then(res=>res.json())
 .then(data=>{
-    let coffeeAvg = (data.reduce((a,b)=>a+b.Coffee_Intake,0)/data.length).toFixed(2);
-    let sleepAvg = (data.reduce((a,b)=>a+ b.Sleep_Hours,0)/data.length).toFixed(2);
+    let coffeeAvg = (data.reduce((a,b)=>a+b.Coffee_Intake,0)/data.length).toFixed(1);
+    document.getElementById('kpi-sleep').innerText = 
+        (data.reduce((a,b)=>a+ b.Sleep_Hours,0)/data.length).toFixed(2);
     let stressMapping = {'Low':1,'Medium':2,'High':3};
-    let stressAvg = (data.reduce((a,b)=>a+stressMapping[b.Stress_Level],0)/data.length).toFixed(2);
-    let bmiAvg = (data.reduce((a,b)=>a+b.BMI,0)/data.length).toFixed(2);
+    document.getElementById('kpi-stress').innerText = 
+        (data.reduce((a,b)=>a+stressMapping[b.Stress_Level],0)/data.length).toFixed(2);
+    document.getElementById('kpi-bmi').innerText = 
+        (data.reduce((a,b)=>a+b.BMI,0)/data.length).toFixed(2);
 
-    document.getElementById('kpi-coffee').innerText = coffeeAvg;
-    document.getElementById('kpi-sleep').innerText = sleepAvg;
-    document.getElementById('kpi-stress').innerText = stressAvg;
-    document.getElementById('kpi-bmi').innerText = bmiAvg;
+    // 初始图表
+    coffeeChart.setOption({
+        xAxis: { show: false, max: 10 },
+        yAxis: { show: false, type: 'category', data: ['咖啡'] },
+        grid: { top: 10, bottom: 10, left: 10, right: 10 },
+        series: [{
+            type: 'pictorialBar',
+            symbol: coffeeURI,
+            symbolSize: [25, 25],
+            symbolRepeat: true,
+            data: [0],
+            animationEasing: 'elasticOut'
+        }]
+    });
+
+    // 动态增长效果
+    let current = 0;
+    let timer = setInterval(()=>{
+        current += 0.2;  // 每次加0.2
+        if(current >= coffeeAvg){
+            current = coffeeAvg;
+            clearInterval(timer);
+        }
+        coffeeChart.setOption({
+            series:[{ data:[current] }]
+        });
+    }, 200);
 });
 </script>
 
