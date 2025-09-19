@@ -143,7 +143,7 @@ function renderBar(habit){
         type: 'pictorialBar',
         symbol: spirit,
         symbolRepeat: true,
-        symbolMargin: 2,
+        
         symbolSize: [30, 30], // 或使用动态高度
         data: xData.map(val => ({ value: val, symbolSize: [30, val * 30 / Math.max(...xData)] }))
     }]
