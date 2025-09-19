@@ -80,7 +80,18 @@ fetch("data/coffee.json")
     // 绘制图表
     echarts.init(document.getElementById('ageDist')).setOption({
       title: {text:"年龄分布", left:"center"},
-      tooltip: { trigger: 'axis', formatter: '{b}: {c} 人' },
+      tooltip: {
+  trigger: 'axis',   // 柱状图、折线图用 'axis'
+  formatter: function(params) {
+    let tar = params[0];
+    return `
+      ${tar.name}<br/>
+      <img src="images/coffee.png" style="width:16px;height:16px;vertical-align:middle;"/> 
+      ${tar.value} 人
+    `;
+  }
+},
+
       xAxis: {type:'category', data: ageDist.map(d=>d.name)},
       yAxis: {type:'value'},
       series: [{data: ageDist.map(d=>d.value), type:'bar',itemStyle: {
