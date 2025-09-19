@@ -125,7 +125,7 @@ function renderBar(habit){
         }
 
         if(!groups[key]) groups[key] = [];
-        groups[key].push(d.Coffee_Intake);
+        groups[key].push(d.Caffeine_mg);
     });
 
     // y轴类别
@@ -145,7 +145,7 @@ function renderBar(habit){
 
   barChart.setOption({
     tooltip: { trigger: 'axis', axisPointer: { type: 'shadow' } },
-    xAxis: { type: 'value', name: '平均咖啡摄入量' },
+    xAxis: { type: 'value', name: '平均咖啡因摄入量（mg）' },
     yAxis: { type: 'category', data: yData, name: habitNameMap[habit] },
     series: [{
       type: 'pictorialBar',
