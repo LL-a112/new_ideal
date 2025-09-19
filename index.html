@@ -3,12 +3,11 @@
 <head>
 <meta charset="UTF-8">
 <title>Global Coffee Health 仪表盘</title>
-<link rel="stylesheet" href="css/style.css">
 <script src="js/echarts.min.js"></script>
 <style>
 .container {
   display: grid;
-  grid-template-columns: repeat(2, 1fr);
+  grid-template-columns: repeat(3, 1fr); /* 一行三列 */
   gap: 20px;
   padding: 20px;
 }
@@ -19,7 +18,7 @@
   padding: 15px;
   text-align: center;
 }
-.card h3 { margin-bottom: 10px; }
+.card h3 { margin-bottom: 15px; }
 </style>
 </head>
 <body>
@@ -38,15 +37,15 @@
 <div class="container">
     <div class="card">
         <h3>平均咖啡摄入量</h3>
-        <div id="coffeeChart" style="height:200px;"></div>
+        <div id="coffeeChart" style="height:250px;"></div>
     </div>
     <div class="card">
         <h3>平均睡眠时长</h3>
-        <div id="sleepChart" style="height:200px;"></div>
+        <div id="sleepChart" style="height:250px;"></div>
     </div>
     <div class="card">
         <h3>平均压力指数</h3>
-        <div id="stressChart" style="height:200px;"></div>
+        <div id="stressChart" style="height:250px;"></div>
     </div>
 </div>
 
@@ -60,39 +59,35 @@ fetch('data/coffee.json')
     const stressMapping = {'Low':1,'Medium':2,'High':3};
     const stressAvg = Math.round(data.reduce((a,b)=>a+stressMapping[b.Stress_Level],0)/data.length);
 
-    // 创建动画图表函数
-    function createAnimChart(id, value, symbolPath, maxVal){
+    // 静态图表函数
+    function createChart(id, value, symbolPath, unit, maxVal){
         let chart = echarts.init(document.getElementById(id));
         chart.setOption({
-            tooltip: { show: true, formatter: '{c}' },
+            tooltip: { show: true, formatter: `{c} ${unit}` },
             xAxis: { type:'value', min:0, max:maxVal, show:false },
             yAxis: { type:'category', data:[''], show:false },
             series:[{
                 type:'pictorialBar',
                 symbol: 'image://' + symbolPath,
-                symbolSize:[40,40],
+                symbolSize:[60,60],  // 图标加大
                 symbolRepeat:true,
-                symbolMargin:1,
-                label: { show:true, position:'top', formatter:'{c}' },
-                data:[0]
+                symbolMargin:2,
+                label: {
+                    show:true,
+                    position:'top',
+                    formatter: `{c} ${unit}`,
+                    fontSize:16
+                },
+                data:[value]
             }],
-            grid: { top:'center', height: 100 }
+            grid: { top:'center', height:180 }
         });
-
-        let current = 0;
-        function animate(){
-            current += 0.5; // 每帧增加，可调
-            if(current > value) current = value;
-            chart.setOption({ series:[{ data:[current] }] });
-            if(current < value) requestAnimationFrame(animate);
-        }
-        animate();
     }
 
-    // 创建三个动画图表
-    createAnimChart('coffeeChart', coffeeAvg, 'coffee.png', coffeeAvg+10);
-    createAnimChart('sleepChart', sleepAvg, 'sleep.png', sleepAvg+10);
-    createAnimChart('stressChart', stressAvg, 'stress.png', stressAvg+3);
+    // 创建三个静态图表
+    createChart('coffeeChart', coffeeAvg, 'coffee.png', '杯', coffeeAvg+10);
+    createChart('sleepChart', sleepAvg, 'sleep.png', '小时', sleepAvg+10);
+    createChart('stressChart', stressAvg, 'stress.png', '级', stressAvg+3);
 });
 </script>
 
