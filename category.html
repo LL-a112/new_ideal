@@ -97,6 +97,14 @@ document.getElementById('habit-select').addEventListener('change', e=>{
     renderBar(e.target.value);
 });
 
+// 中文名称映射
+const habitNameMap = {
+    'Smoking': '是否吸烟',
+    'Alcohol_Consumption': '是否饮酒',
+    'Physical_Activity_Hours': '运动时长'
+};
+
+
 function renderBar(habit){
     let groups = {};
 
@@ -124,11 +132,11 @@ function renderBar(habit){
     barChart.setOption({
         tooltip: { trigger: 'axis', axisPointer: { type: 'shadow' } },
         xAxis: { type: 'value', name: '平均咖啡摄入量' },
-        yAxis: { type: 'category', data: xData, name: habit },
+        yAxis: { type: 'category', data: yData, name: habitNameMap[habit] }, // 中文名称
         series: [{
             type: 'pictorialBar',
             symbol: spirit,
-            symbolSize: [30, 30],  // 控制咖啡图案大小
+            symbolSize: [35, 35],  // 控制咖啡图案大小
             symbolRepeat: true,
             symbolMargin: 2,
             data: yData
